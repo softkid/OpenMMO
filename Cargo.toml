@@ -1,3 +1,7 @@
 [workspace]
 members = ["agent-client", "server", "shared", "terrain", "tools/terrain-gen"]
 resolver = "2"
+
+[profile.dev]
+debug = 0
+incremental = false
