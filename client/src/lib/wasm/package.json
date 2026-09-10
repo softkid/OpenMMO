@@ -1,0 +1,15 @@
+{
+  "name": "onlinerpg-shared",
+  "type": "module",
+  "version": "0.1.0",
+  "files": [
+    "onlinerpg_shared_bg.wasm",
+    "onlinerpg_shared.js",
+    "onlinerpg_shared.d.ts"
+  ],
+  "main": "onlinerpg_shared.js",
+  "types": "onlinerpg_shared.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}
