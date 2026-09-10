@@ -1084,6 +1084,13 @@ async fn handle_client_message(
                     (!state.is_official_npc).then_some(selected_character.satiation),
                 )
                 .await;
+            let rested_minutes = if state.is_official_npc {
+                0
+            } else {
+                game_state
+                    .grant_rested_bonus(&id, selected_character.logged_out_at)
+                    .await
+            };
             if !game_state
                 .attach_player_to_account_session(&authed_account_name, account_session_id, id)
                 .await
@@ -1186,6 +1193,12 @@ async fn handle_client_message(
             if let Some(notice) = game_state.server_notice().await {
                 responses.push(ServerMessage::ServerNotice {
                     message: Some(notice),
+                });
+            }
+
+            if rested_minutes > 0 {
+                responses.push(ServerMessage::SystemMessage {
+                    message: crate::game_state::wellbeing::rested_welcome_message(rested_minutes),
                 });
             }
 

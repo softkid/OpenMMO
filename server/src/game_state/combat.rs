@@ -542,16 +542,25 @@ impl super::GameState {
         if xp_amount == 0 {
             return;
         }
+        // Rested growth (doc/REST.md) is per-recipient — read each player's
+        // own window before the shared XP lock, so a party of one rested and
+        // one not-rested member awards each their own amount.
+        let mut awarded_amounts = Vec::with_capacity(recipients.len());
+        for player_id in recipients {
+            let awarded = self.apply_rested_bonus(player_id, xp_amount).await;
+            awarded_amounts.push((*player_id, awarded));
+        }
+
         // Read-modify-write under one lock: a member can receive two kills'
         // shares concurrently, and a split read/write would lose one.
         let mut grants = Vec::with_capacity(recipients.len());
         {
             let mut map = self.player_characters.write().await;
-            for player_id in recipients {
+            for (player_id, awarded) in &awarded_amounts {
                 if let Some(entry) = map.get_mut(player_id) {
                     let old_xp = entry.1;
-                    entry.1 += u64::from(xp_amount);
-                    grants.push((*player_id, old_xp, entry.1, entry.2.clone()));
+                    entry.1 += u64::from(*awarded);
+                    grants.push((*player_id, old_xp, entry.1, entry.2.clone(), *awarded));
                 }
             }
         }
@@ -566,7 +575,7 @@ impl super::GameState {
         let mut leveled = Vec::new();
         {
             let mut players = self.players.write().await;
-            for (player_id, old_xp, new_xp, attributes) in &grants {
+            for (player_id, old_xp, new_xp, attributes, awarded) in &grants {
                 let old_level = xp::level_from_xp(*old_xp);
                 let new_level = xp::level_from_xp(*new_xp);
                 let leveled_up = new_level > old_level;
@@ -609,6 +618,7 @@ impl super::GameState {
                     leveled_up,
                     p.max_health,
                     p.health,
+                    *awarded,
                 ));
             }
         }
@@ -621,12 +631,14 @@ impl super::GameState {
             self.party_vitals_dirty.write().await.extend(leveled);
         }
 
-        for (player_id, name, new_xp, new_level, leveled_up, max_hp, current_hp) in notices {
+        for (player_id, name, new_xp, new_level, leveled_up, max_hp, current_hp, awarded) in
+            notices
+        {
             self.send_direct_message(
                 &player_id,
                 ServerMessage::XpGained {
                     player_id,
-                    xp_amount,
+                    xp_amount: awarded,
                     xp_lost: 0,
                     total_xp: new_xp,
                     new_level,
@@ -640,7 +652,7 @@ impl super::GameState {
             debug!(
                 "Player {} gained {} XP (total: {}, level: {}{})",
                 name,
-                xp_amount,
+                awarded,
                 new_xp,
                 new_level,
                 if leveled_up { " LEVEL UP!" } else { "" }

@@ -145,6 +145,12 @@ pub struct CharacterRecord {
     /// Nonzero unlocks admin for ADMIN_EMAILS-allowlisted accounts (tiers reserved).
     pub admin_role: i64,
     pub satiation: u32,
+    /// Epoch seconds of this character's last save (periodic or logout);
+    /// `None` for a character that has never been saved. Read once at login
+    /// to grant a rested-XP window (doc/REST.md) — never written from Rust,
+    /// only ever by SQLite's own clock in `write_character_states`, so it
+    /// can't be spoofed by a client-supplied timestamp.
+    pub logged_out_at: Option<i64>,
 }
 
 pub struct CharacterSaveData {
@@ -177,7 +183,7 @@ pub struct TradeLedgerEntry {
 }
 
 /// Column list shared between queries that return full CharacterRecord rows.
-const CHARACTER_COLUMNS: &str = "id, character_name, created_at, level, xp, max_hp, attr_str, attr_dex, attr_con, attr_int, attr_wis, attr_cha, attr_guard, class, last_x, last_y, last_z, last_rotation, health, floor_level, gender, gold, admin_role, satiation";
+const CHARACTER_COLUMNS: &str = "id, character_name, created_at, level, xp, max_hp, attr_str, attr_dex, attr_con, attr_int, attr_wis, attr_cha, attr_guard, class, last_x, last_y, last_z, last_rotation, health, floor_level, gender, gold, admin_role, satiation, logged_out_at";
 
 fn character_record_from_row(row: &rusqlite::Row) -> rusqlite::Result<CharacterRecord> {
     Ok(CharacterRecord {
@@ -230,6 +236,7 @@ fn character_record_from_row(row: &rusqlite::Row) -> rusqlite::Result<CharacterR
             .get::<_, i64>(23)
             .unwrap_or(i64::from(onlinerpg_shared::hunger::SATIATION_START))
             .clamp(0, i64::from(onlinerpg_shared::hunger::SATIATION_MAX)) as u32,
+        logged_out_at: row.get::<_, Option<i64>>(24).ok().flatten(),
     })
 }
 
@@ -349,6 +356,12 @@ impl From<rusqlite::Error> for AuthError {
 }
 
 impl AuthService {
+    /// Every save (periodic flush or logout) stamps `logged_out_at` with
+    /// SQLite's own clock. Firing on periodic saves too — not just the true
+    /// logout — is deliberate: if the process dies without a clean
+    /// disconnect, the last periodic save is still a close approximation of
+    /// "roughly when they stopped playing" for the rested-XP window
+    /// (doc/REST.md) to key off at the next login.
     fn write_character_states(
         conn: &Connection,
         data: &[CharacterSaveData],
@@ -356,7 +369,7 @@ impl AuthService {
         let mut stmt = conn.prepare(
             "UPDATE characters SET last_x = ?1, last_y = ?2, last_z = ?3, last_rotation = ?4, \
              xp = ?5, level = ?6, max_hp = ?7, health = ?8, floor_level = ?9, gold = ?10, \
-             satiation = ?11 WHERE id = ?12",
+             satiation = ?11, logged_out_at = strftime('%s', 'now') WHERE id = ?12",
         )?;
         for d in data {
             stmt.execute(params![
@@ -794,6 +807,11 @@ impl AuthService {
                     onlinerpg_shared::hunger::SATIATION_START
                 ),
             ),
+            // Nullable, no default: a character migrated onto this column
+            // has never "logged out" as far as the rested-XP system is
+            // concerned, so their next login correctly grants no bonus
+            // rather than guessing at one.
+            ("logged_out_at", "INTEGER".into()),
         ];
 
         for (column_name, column_def) in &expected_columns {
@@ -1330,6 +1348,7 @@ impl AuthService {
             gold: 0,
             admin_role: 0,
             satiation: onlinerpg_shared::hunger::SATIATION_START,
+            logged_out_at: None,
         })
     }
 

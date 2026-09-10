@@ -31,32 +31,57 @@ struct EnchantScroll {
     select: fn(&PlayerInventory, &crate::item_defs::ItemDefs, u64) -> Option<EquipSlot>,
     ladder: fn(i32) -> u32,
     no_target: &'static str,
-    destroyed: fn(&str) -> String,
+    /// Printed on a miss. The item is never destroyed — see
+    /// `read_enchant_scroll` — so this just describes the fizzle.
+    failed: fn(&str) -> String,
     honed: fn(&str, i32) -> String,
 }
 
 /// Success chance, in basis points, of enchanting an item currently at
-/// `enchant`. Guaranteed through +4, then the over-enchanting gamble:
-/// 75/50/25% at +5/+6/+7, halving each level from +8 until the 1% floor at
-/// +12 — the ladder never closes entirely, it just gets very expensive.
+/// `enchant`. Guaranteed through +7, then a gentle taper — 80/65/50/35%
+/// at +8 through +11, holding at a 20% floor from +12 onward.
+///
+/// This replaces the old Lineage-style ladder (guaranteed through +4, then
+/// halving to a 1% floor with catastrophic destruction on a miss). A miss
+/// here never destroys the item — see `read_enchant_scroll` — so the curve
+/// no longer has to protect players from ruin; it only has to keep the top
+/// end feeling earned. doc/ENCHANT.md and doc/DESIGN_DIRECTION.md have the
+/// reasoning and the old table for history.
 fn enchant_success_bp(enchant: i32) -> u32 {
     match enchant {
-        ..=4 => ENCHANT_BP_SCALE,
-        5 => 7_500,
-        6 => 5_000,
-        7 => 2_500,
-        8 => 1_250,
-        9 => 625,
-        10 => 312,
-        11 => 156,
-        _ => 100, // the 1% floor
+        ..=7 => ENCHANT_BP_SCALE,
+        8 => 8_000,
+        9 => 6_500,
+        10 => 5_000,
+        11 => 3_500,
+        _ => 2_000, // the 20% floor from +12 onward
     }
 }
 
-/// The ladder shifted two levels down for armor — free only through +2, since
+/// The ladder shifted two levels down for armor — free only through +5, since
 /// armor fills six slots to a weapon's one (doc/ENCHANT.md).
 fn armor_enchant_success_bp(enchant: i32) -> u32 {
     enchant_success_bp(enchant.saturating_add(2))
+}
+
+/// Direct gold sink for one enchant attempt, in copper — a dab of "polishing
+/// oil" charged whether the attempt succeeds or fails. This is the
+/// replacement sink for the gold that used to be destroyed indirectly via
+/// lost base items and rebought scrolls (doc/DESIGN_DIRECTION.md's own
+/// stated preference: "골드 싱크가 필요하면... 직접적인 수단(수수료,
+/// 소모품, 서비스)으로 설계한다" — if a gold sink is needed, design it
+/// directly, not as a side effect of destruction). Free inside the
+/// guaranteed zone; scales up for the tail, where players are choosing to
+/// chase a long shot rather than being forced to gamble at all.
+fn enchant_attempt_fee_copper(enchant: i32) -> i64 {
+    match enchant {
+        ..=7 => 0,
+        8 => 500,      // 5s
+        9 => 1_500,    // 15s
+        10 => 5_000,   // 50s
+        11 => 15_000,  // 1g 50s
+        _ => 50_000,   // 5g flat from +12 onward
+    }
 }
 
 /// One unit-insert request: `quantity` units of one def at one enchant level,
@@ -979,9 +1004,9 @@ impl super::GameState {
                 },
                 ladder: enchant_success_bp,
                 no_target: "You have no weapon wielded to enchant",
-                destroyed: |name| {
+                failed: |name| {
                     format!(
-                        "The runes flare out of control — your {name} bursts into glittering dust!"
+                        "The runes flare and fade without taking hold — your {name} is unharmed."
                     )
                 },
                 honed: |name, enchant| {
@@ -1012,8 +1037,8 @@ impl super::GameState {
                 },
                 ladder: armor_enchant_success_bp,
                 no_target: "You have no armor worn to enchant",
-                destroyed: |name| {
-                    format!("The runes flare out of control — your {name} crumbles to dust!")
+                failed: |name| {
+                    format!("The runes flare and fade without taking hold — your {name} is unharmed.")
                 },
                 honed: |name, enchant| {
                     format!("The runes sink into your {name}, hardening it. (+{enchant})")
@@ -1024,8 +1049,12 @@ impl super::GameState {
     }
 
     /// The ceremony both enchant scrolls share: refuse while defeated or with
-    /// nothing to target (keeping the scroll), else spend the scroll and either
-    /// raise the piece by one or destroy it on the odds ladder's roll.
+    /// nothing to target, and refuse (keeping both scroll and gold) if the
+    /// attempt's polishing-oil fee isn't covered. Otherwise the fee is spent
+    /// up front, the scroll is spent on the roll, and the piece either rises
+    /// by one or — on a miss — simply stays exactly as it was. There is no
+    /// destroy path: see `enchant_success_bp` for why the odds ladder no
+    /// longer needs one.
     async fn read_enchant_scroll(
         &self,
         player_id: &PlayerId,
@@ -1039,50 +1068,87 @@ impl super::GameState {
             return;
         }
 
-        // Rolled before the lock is taken; `pick` chooses among the targets
+        // Rolled before the locks are taken; `pick` chooses among the targets
         // the selector finds.
         let (roll_bp, pick) = {
             let mut rng = rand::thread_rng();
             (rng.gen_range(0..ENCHANT_BP_SCALE), rng.gen::<u64>())
         };
 
-        let (snapshot, message, enchant_log) = {
-            let mut inventories = self.inventories.write().await;
-            let inv = match inventories.get_mut(player_id) {
-                Some(inv) => inv,
-                None => return,
-            };
+        // Lock order matches the rest of the module: gold before inventories
+        // (doc comment on `player_trades` in mod.rs).
+        let mut gold_map = self.player_gold.write().await;
+        let mut inventories = self.inventories.write().await;
 
-            let Some(slot) = (scroll.select)(inv, &self.item_defs, pick) else {
-                drop(inventories);
-                self.send_system_message(player_id, scroll.no_target).await;
-                return;
-            };
-
-            // Spent whether the enchant takes or the piece breaks.
-            consume_one(inv, instance_id);
-
-            let item = inv.equipped.get_mut(&slot).expect("the selector found it");
-            let name = self.item_name(&item.item_def_id);
-            let (message, enchant_log) = if roll_bp >= (scroll.ladder)(item.enchant) {
-                let log = format!(
-                    "destroyed {} enchanting at +{}",
-                    item.item_def_id, item.enchant
-                );
-                inv.equipped.remove(&slot);
-                ((scroll.destroyed)(&name), log)
-            } else {
-                item.enchant += 1;
-                (
-                    (scroll.honed)(&name, item.enchant),
-                    format!("enchanted {} to +{}", item.item_def_id, item.enchant),
-                )
-            };
-            (inv.clone(), message, enchant_log)
+        let Some(inv) = inventories.get_mut(player_id) else {
+            drop(inventories);
+            drop(gold_map);
+            return;
         };
+
+        let Some(slot) = (scroll.select)(inv, &self.item_defs, pick) else {
+            drop(inventories);
+            drop(gold_map);
+            self.send_system_message(player_id, scroll.no_target).await;
+            return;
+        };
+
+        let current_enchant = inv
+            .equipped
+            .get(&slot)
+            .expect("the selector found it")
+            .enchant;
+        let fee = enchant_attempt_fee_copper(current_enchant);
+        let wallet = gold_map.entry(*player_id).or_insert(0);
+        if *wallet < fee {
+            let short_by = fee - *wallet;
+            drop(inventories);
+            drop(gold_map);
+            self.send_system_message(
+                player_id,
+                format!(
+                    "This attempt needs {fee} copper in polishing oil — you're {short_by} short."
+                ),
+            )
+            .await;
+            return;
+        }
+        *wallet -= fee;
+        let new_gold = *wallet;
+
+        // Spent whether the enchant takes or fizzles.
+        consume_one(inv, instance_id);
+
+        let item = inv.equipped.get_mut(&slot).expect("the selector found it");
+        let name = self.item_name(&item.item_def_id);
+        let (mut message, enchant_log) = if roll_bp >= (scroll.ladder)(item.enchant) {
+            let log = format!(
+                "failed to enchant {} at +{} (kept)",
+                item.item_def_id, item.enchant
+            );
+            ((scroll.failed)(&name), log)
+        } else {
+            item.enchant += 1;
+            (
+                (scroll.honed)(&name, item.enchant),
+                format!("enchanted {} to +{}", item.item_def_id, item.enchant),
+            )
+        };
+        if fee > 0 {
+            message.push_str(&format!(" (Spent {fee}c in polishing oil.)"));
+        }
+        let snapshot = inv.clone();
+
+        drop(inventories);
+        drop(gold_map);
 
         info!("{} {enchant_log}", self.player_name_of(player_id).await);
         self.mark_inventory_dirty(player_id).await;
+        if fee > 0 {
+            self.mark_dirty(player_id).await;
+            self.send_direct_message(player_id, ServerMessage::GoldUpdate { gold: new_gold })
+                .await;
+        }
         self.send_inventory_snapshot(player_id, snapshot).await;
         self.send_system_message(player_id, message).await;
     }

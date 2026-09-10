@@ -30,6 +30,22 @@ pub(crate) const DEAL_MAX_HALF_BAND_PCT: i32 = 25;
 pub(crate) const RESIDENT_MIN_HALF_BAND_PCT: i32 = 10;
 pub(crate) const RESIDENT_MAX_HALF_BAND_PCT: i32 = 50;
 
+/// Rapport bonus cap, in band-half-width percentage points — never more
+/// than half the base merchant band, so a lifetime regular customer still
+/// hasn't out-earned a naturally high-CHA stranger, only closed most of the
+/// gap (doc/NEXT_GEN_VISION.md's "관계 기반 경제").
+const RAPPORT_MAX_BONUS_PCT: i32 = 15;
+/// Accepted deals with one NPC per bonus point. Deliberately coarse: this
+/// rewards an ongoing relationship, not min-maxing the haggle button.
+const RAPPORT_DEALS_PER_BONUS_PCT: u32 = 3;
+
+/// Widens the CHA-derived band by how many deals this player has had
+/// accepted by this specific NPC — a regular gets treated like one,
+/// independent of the LLM's own read on them that session.
+fn rapport_bonus_pct(accepted_deal_count: u32) -> i32 {
+    ((accepted_deal_count / RAPPORT_DEALS_PER_BONUS_PCT) as i32).min(RAPPORT_MAX_BONUS_PCT)
+}
+
 /// How long a granted deal stays redeemable (real time).
 const DEAL_TTL_MS: u64 = 5 * 60 * 1000;
 /// Minimum real time between *accepted* offers per (merchant, player).
@@ -158,6 +174,31 @@ impl super::GameState {
         base + bonus
     }
 
+    /// This player's rapport bonus for one NPC, from their accepted-deal
+    /// history (doc/NEXT_GEN_VISION.md). 0 for a first-time customer.
+    async fn rapport_bonus_for(&self, player_id: &PlayerId, merchant_name: &str) -> i32 {
+        let count = self
+            .rapport
+            .read()
+            .await
+            .get(&(*player_id, merchant_name.to_string()))
+            .copied()
+            .unwrap_or(0);
+        rapport_bonus_pct(count)
+    }
+
+    /// Record one more accepted deal toward this (player, NPC) pair's
+    /// rapport. Called once per grant in `offer_deal`, after every other
+    /// check has passed — a rejected offer never counts.
+    async fn grow_rapport(&self, player_id: &PlayerId, merchant_name: &str) {
+        *self
+            .rapport
+            .write()
+            .await
+            .entry((*player_id, merchant_name.to_string()))
+            .or_insert(0) += 1;
+    }
+
     /// Handle an NPC's `OfferDeal`: validate, clamp to the band, charge
     /// budgets, store the deal, and notify both sides. Every decision is
     /// logged under the `deal` target with the LLM's reason.
@@ -271,12 +312,15 @@ impl super::GameState {
             return reject("that item has no price").await;
         };
 
-        // Clamp the requested modifier to the target's CHA-derived band.
+        // Clamp the requested modifier to the target's CHA-derived band,
+        // widened by whatever rapport this player has built with this NPC
+        // specifically (doc/NEXT_GEN_VISION.md's "관계 기반 경제").
         let cha = self.effective_cha(target_player_id).await;
-        let (rate, half_band) = match def.haggle_params(kind, item_def_id, cha) {
+        let (rate, base_half_band) = match def.haggle_params(kind, item_def_id, cha) {
             Ok(params) => params,
             Err(why) => return reject(why).await,
         };
+        let half_band = base_half_band + self.rapport_bonus_for(target_player_id, &merchant_name).await;
         let applied = modifier_pct.clamp(-half_band, half_band);
         let cost = deal_cost(base_price, rate, kind, applied);
 
@@ -333,6 +377,7 @@ impl super::GameState {
                 },
             );
         }
+        self.grow_rapport(target_player_id, &merchant_name).await;
 
         info!(
             target: "deal",

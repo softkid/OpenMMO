@@ -173,39 +173,105 @@ async fn enchant_armor_scroll_requires_worn_armor() {
     }
 }
 
+/// Non-destructive design: a missed enchant fizzles (item unchanged) rather
+/// than destroying the item, no matter how deep into the tail the piece
+/// already is. Replaces the old `..._destroys_over_enchanted_...` tests.
 #[tokio::test]
-async fn enchant_armor_scroll_destroys_over_enchanted_armor() {
-    let game_state = make_test_game_state("enchant_armor_boom");
+async fn enchant_armor_scroll_never_destroys_over_enchanted_armor() {
+    let game_state = make_test_game_state("enchant_armor_persists");
     let _rx =
         setup_armor_enchant_reader(&game_state, &[(EquipSlot::Chest, "leather_armor", 12)], 100)
             .await;
+    game_state
+        .player_gold
+        .write()
+        .await
+        .insert(pid("reader"), 10_000_000);
 
     let reader = pid("reader");
+    let mut saw_a_fizzle = false;
+    let mut previous_enchant = 12;
     for _ in 0..100 {
         game_state.use_item(&reader, SCROLL_ID).await;
         let inv = game_state.get_player_inventory(&reader).await.unwrap();
-        if !inv.equipped.contains_key(&EquipSlot::Chest) {
-            return; // evaporated, as expected
+        let piece = inv
+            .equipped
+            .get(&EquipSlot::Chest)
+            .expect("armor must never be destroyed — only hold or advance");
+        if piece.enchant == previous_enchant {
+            saw_a_fizzle = true;
         }
+        previous_enchant = piece.enchant;
     }
-    panic!("the armor should have evaporated within 100 reads at 99% odds");
+    assert!(
+        saw_a_fizzle,
+        "at a 20% floor, 100 reads should include at least one miss that leaves the item untouched"
+    );
 }
 
 #[tokio::test]
-async fn enchant_scroll_destroys_over_enchanted_weapon() {
-    let game_state = make_test_game_state("enchant_boom");
-    // At +12 the success floor is 1%, so each read is a 99% destruction
-    // roll. 100 scrolls make survival odds ~1e-200: the loop below is
-    // deterministic for all practical purposes.
+async fn enchant_scroll_never_destroys_over_enchanted_weapon() {
+    let game_state = make_test_game_state("enchant_weapon_persists");
     let _rx = setup_weapon_enchant_reader(&game_state, Some(("iron_sword", 12)), 100).await;
+    game_state
+        .player_gold
+        .write()
+        .await
+        .insert(pid("reader"), 10_000_000);
 
     let reader = pid("reader");
+    let mut saw_a_fizzle = false;
+    let mut previous_enchant = 12;
     for _ in 0..100 {
         game_state.use_item(&reader, SCROLL_ID).await;
         let inv = game_state.get_player_inventory(&reader).await.unwrap();
-        if !inv.equipped.contains_key(&EquipSlot::MainHand) {
-            return; // evaporated, as expected
+        let weapon = inv
+            .equipped
+            .get(&EquipSlot::MainHand)
+            .expect("the weapon must never be destroyed — only hold or advance");
+        if weapon.enchant == previous_enchant {
+            saw_a_fizzle = true;
         }
+        previous_enchant = weapon.enchant;
     }
-    panic!("the weapon should have evaporated within 100 reads at 99% odds");
+    assert!(
+        saw_a_fizzle,
+        "at a 20% floor, 100 reads should include at least one miss that leaves the item untouched"
+    );
+}
+
+/// The polishing-oil fee gates the attempt itself: too poor to pay it, and
+/// the scroll is kept unread rather than being spent on a roll the player
+/// can't afford.
+#[tokio::test]
+async fn enchant_weapon_scroll_requires_affordable_oil_fee() {
+    let game_state = make_test_game_state("enchant_weapon_poor");
+    let mut rx = setup_weapon_enchant_reader(&game_state, Some(("iron_sword", 12)), 1).await;
+    // No gold seeded — a fresh wallet starts at 0, and the +12 fee is 50,000c.
+
+    game_state.use_item(&pid("reader"), SCROLL_ID).await;
+
+    let inv = game_state
+        .get_player_inventory(&pid("reader"))
+        .await
+        .unwrap();
+    assert_eq!(
+        inv.bag.len(),
+        1,
+        "the scroll should be kept when the fee can't be paid"
+    );
+    assert_eq!(
+        inv.equipped.get(&EquipSlot::MainHand).unwrap().enchant,
+        12,
+        "the weapon should be untouched"
+    );
+    match rx.try_recv() {
+        Ok(ServerMessage::SystemMessage { message }) => {
+            assert!(
+                message.contains("polishing oil"),
+                "unexpected message: {message}"
+            );
+        }
+        other => panic!("Expected a system reply, got {:?}", other),
+    }
 }

@@ -317,6 +317,7 @@ impl super::GameState {
         self.forget_player_skills(player_id).await;
         self.remove_dungeon_discoveries(player_id).await;
         self.forget_hunger(player_id).await;
+        self.forget_wellbeing(player_id).await;
     }
 
     /// Serializes account replacement and character deletion with game entry.
@@ -706,6 +707,9 @@ impl super::GameState {
         {
             let mut players = self.players.write().await;
             players.insert(player_id, player.clone());
+        }
+        if !player.is_official_npc {
+            self.register_wellbeing_session(&player_id).await;
         }
         {
             let mut names = self.player_ids_by_name.write().await;

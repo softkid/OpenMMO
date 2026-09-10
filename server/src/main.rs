@@ -592,6 +592,21 @@ async fn main() -> ExitCode {
         },
     ));
 
+    // Mindfulness session nudges (doc/REST.md): a friendly, once-per-session
+    // heads-up at a couple of elapsed-playtime thresholds. 60s is plenty
+    // coarse for a check that only ever fires a couple of times a day per
+    // player.
+    let game_state_for_wellbeing = Arc::clone(&game_state);
+    background.spawn(run_ticks(
+        "wellbeing",
+        Duration::from_secs(60),
+        drain_shutdown.clone(),
+        move || {
+            let game_state = Arc::clone(&game_state_for_wellbeing);
+            async move { game_state.tick_wellbeing_nudges().await }
+        },
+    ));
+
     let addr = format!("{}:{}", args.bind, args.port);
     let listener = match TcpListener::bind(addr.as_str()).await {
         Ok(listener) => {

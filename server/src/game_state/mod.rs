@@ -255,6 +255,7 @@ mod time;
 mod tip_hat;
 mod trading;
 pub use trading::BUYBACK_SWEEP_PERIOD;
+pub(crate) mod wellbeing;
 
 // Visible crate-wide so tests outside this module (e.g. the login gate in
 // `connection`) can reuse the temp-DB and game-state factories.
@@ -489,6 +490,18 @@ pub struct GameState {
     /// Live player-to-player trade sessions and pending requests
     /// (doc/TRADE.md). Ranked above `player_gold`/`inventories`.
     player_trades: Arc<RwLock<player_trade::PlayerTrades>>,
+    /// player_id → active rested-XP window (doc/REST.md). Owner-private,
+    /// like gold; official NPCs never get an entry (the exemption).
+    rested_bonus: Arc<RwLock<HashMap<PlayerId, wellbeing::RestedBonus>>>,
+    /// player_id → this session's clock, for the mindfulness nudge only
+    /// (doc/REST.md). In-memory, dropped on logout; never read by anything
+    /// that restricts play.
+    wellbeing_sessions: Arc<RwLock<HashMap<PlayerId, wellbeing::SessionClock>>>,
+    /// (player_id, npc name) → accepted-deal count, widening that pair's
+    /// haggle band (doc/NEXT_GEN_VISION.md's "관계 기반 경제"). In-memory
+    /// only, like `deals`/`deal_ledgers` above it — a restart resets every
+    /// relationship rather than risking a stale, unearned bonus surviving.
+    rapport: Arc<RwLock<HashMap<(PlayerId, String), u32>>>,
 }
 
 impl GameState {
@@ -660,6 +673,9 @@ impl GameState {
             stalls: Arc::new(RwLock::new(HashMap::new())),
             tip_hats: Arc::new(RwLock::new(HashMap::new())),
             player_trades: Arc::new(RwLock::new(player_trade::PlayerTrades::default())),
+            rested_bonus: Arc::new(RwLock::new(HashMap::new())),
+            wellbeing_sessions: Arc::new(RwLock::new(HashMap::new())),
+            rapport: Arc::new(RwLock::new(HashMap::new())),
         }
     }
 

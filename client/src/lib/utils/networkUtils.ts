@@ -1,4 +1,6 @@
 export function getDefaultServerUrl(): string {
+  const envUrl = import.meta.env.VITE_SERVER_URL
+  if (envUrl) return envUrl
   if (typeof window === 'undefined') return 'ws://localhost:5002'
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
   const hostname = window.location.hostname
@@ -8,6 +10,8 @@ export function getDefaultServerUrl(): string {
 }
 
 export function getTerrainApiUrl(): string {
+  const envUrl = import.meta.env.VITE_API_URL
+  if (envUrl) return envUrl
   if (typeof window === 'undefined') return 'http://localhost:5003'
   // In dev, Vite proxies /api/terrain → http://localhost:5003
   // Use same origin so the request goes through the proxy
