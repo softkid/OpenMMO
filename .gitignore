@@ -50,6 +50,9 @@ logs/
 *.glb
 *.mp3
 *.m4a
+!client/dist/**/*.mp3
+!client/dist/**/*.m4a
+!client/dist/**/*.glb
 *.blend
 # Raw source drops (Meshy obj zips, Mixamo fbx) — synced via HF too
 /assets/
