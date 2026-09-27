@@ -56,10 +56,9 @@
   }
 
   onMount(async () => {
-    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined
-    if (!clientId) {
-      errorMessage = 'VITE_GOOGLE_CLIENT_ID is not configured'
-      return
+    let clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined
+    if (!clientId || clientId === '' || clientId === '__GOOGLE_CLIENT_ID__') {
+      clientId = '487922619083-hlaqeerv2s2kv2ka8vlfamn23sh4mdjc.apps.googleusercontent.com'
     }
 
     try {
