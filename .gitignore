@@ -93,7 +93,7 @@ agent-client/data/npcs/**/favor.json
 # Heightmap tiles fetched from the server (regenerable cache)
 agent-client/data/cache/
 # agent-client release archives (tools/package-agent-client.sh, .ps1)
-/dist/
+# /dist/
 
 # Claude Code (keep agents and commands for sharing)
 .claude/*
