@@ -70,6 +70,8 @@ services:
         condition: service_healthy
     ports:
       - "${CLIENT_PORT:-8080}:80"
+    volumes:
+      - ./client/dist:/usr/share/nginx/html
     restart: unless-stopped
 
   # Opt-in: needs agent-client/data/config.toml, which is gitignored deployment

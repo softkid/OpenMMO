@@ -1,0 +1,246 @@
+[
+  {
+    "id": "bed",
+    "name": "Bed",
+    "model": "objects/bed.glb",
+    "interaction": "sleep",
+    "interactOffset": {
+      "x": 0,
+      "y": 0.78,
+      "z": 0
+    },
+    "solid": true
+  },
+  {
+    "id": "stone_bridge",
+    "name": "Stone Bridge",
+    "model": "objects/stone_bridge.glb",
+    "kind": "bridge",
+    "gridAlign": true,
+    "minLocalY": 0,
+    "flattenFootLengthZ": 6,
+    "flattenFootWidthX": 5,
+    "bridge": {
+      "deckMinX": -1.77,
+      "deckMaxX": 1.77,
+      "deckMinZ": -10.13,
+      "deckMaxZ": 10.13,
+      "deckCrownY": 2.5,
+      "deckEndY": 1,
+      "deckAxis": "z",
+      "railOuterOffset": 0.3,
+      "deckYSamples": [
+        2.4951, 2.466, 2.3864, 2.2548, 2.0581, 1.8262, 1.4958, 1.1615, 0.821,
+        0.4108, 0.0006
+      ]
+    }
+  },
+  {
+    "id": "bridge_wood",
+    "name": "Wood Bridge",
+    "model": "objects/bridge_wood.glb",
+    "kind": "bridge",
+    "gridAlign": true,
+    "flattenBuryDepth": 0.2,
+    "bridge": {
+      "deckMinX": -2,
+      "deckMaxX": 2,
+      "deckMinZ": -13,
+      "deckMaxZ": 13,
+      "deckCrownY": 2.08,
+      "deckEndY": 0.4,
+      "deckAxis": "z",
+      "railOuterOffset": 0.4,
+      "deckYSamples": [
+        2.0824, 2.0578, 2.0008, 1.8872, 1.7115, 1.4986, 1.2119, 0.9122, 0.5851,
+        0.3941, 0.3941
+      ]
+    }
+  },
+  {
+    "id": "big_stone_bridge",
+    "name": "Big Stone Bridge",
+    "model": "objects/big_stone_bridge.glb",
+    "kind": "bridge",
+    "gridAlign": true,
+    "minLocalY": -0.85,
+    "flattenBuryDepth": 0.9,
+    "flattenFootLengthZ": 7,
+    "flattenFootWidthX": 6,
+    "bridge": {
+      "deckMinX": -2.32,
+      "deckMaxX": 2.32,
+      "deckMinZ": -14,
+      "deckMaxZ": 14,
+      "deckCrownY": 2.44,
+      "deckEndY": 0.15,
+      "deckAxis": "z",
+      "railOuterOffset": 1.8,
+      "deckYSamples": [
+        2.4378, 2.356, 2.2743, 2.0416, 1.7963, 1.4486, 1.0824, 0.6838, 0.2756,
+        0.15, 0.15
+      ]
+    }
+  },
+  {
+    "id": "bridge_wood_long",
+    "name": "Long Wooden Bridge",
+    "model": "objects/bridge_wood_long.glb",
+    "kind": "bridge",
+    "gridAlign": true,
+    "minLocalY": -2.2,
+    "flattenBuryDepth": 2.2,
+    "flattenFootLengthZ": 1,
+    "flattenFootWidthX": 4,
+    "bridge": {
+      "deckMinX": -1.77,
+      "deckMaxX": 1.77,
+      "deckMinZ": -10.15,
+      "deckMaxZ": 10.15,
+      "deckCrownY": 0.35,
+      "deckEndY": 0.35,
+      "deckAxis": "z",
+      "railOuterOffset": 0.05,
+      "deckYSamples": [
+        0.35, 0.35, 0.35, 0.35, 0.35, 0.35, 0.35, 0.35, 0.35, 0.35, 0.35
+      ]
+    }
+  },
+  {
+    "id": "signpost",
+    "name": "Signpost",
+    "model": "objects/signpost.glb",
+    "textLabel": true
+  },
+  {
+    "id": "signpost_mirrored",
+    "name": "Signpost (Mirrored)",
+    "model": "objects/signpost_mirrored.glb",
+    "textLabel": true
+  },
+  {
+    "id": "shop_sign",
+    "name": "Shop Sign",
+    "procedural": "shopSign",
+    "textLabel": true,
+    "defaultY": 4.16
+  },
+  {
+    "id": "barrel",
+    "name": "Barrel",
+    "model": "objects/barrel.glb",
+    "solid": true
+  },
+  {
+    "id": "barrel_broken",
+    "name": "Broken Barrel",
+    "model": "objects/barrel_broken.glb"
+  },
+  {
+    "id": "crate",
+    "name": "Crate",
+    "model": "objects/crate.glb",
+    "solid": true
+  },
+  {
+    "id": "crate_pieces",
+    "name": "Broken Crate",
+    "model": "objects/crate_pieces.glb"
+  },
+  {
+    "id": "chest",
+    "name": "Chest",
+    "model": "objects/chest.glb",
+    "solid": true
+  },
+  {
+    "id": "chest_animated",
+    "name": "Chest (Animated)",
+    "model": "objects/chest_animated.glb",
+    "solid": true
+  },
+  {
+    "id": "chair",
+    "name": "Chair",
+    "model": "objects/chair.glb",
+    "solid": true
+  },
+  {
+    "id": "table",
+    "name": "Table",
+    "model": "objects/table.glb",
+    "solid": true
+  },
+  {
+    "id": "ammobox",
+    "name": "Ammo Box",
+    "model": "objects/ammobox.glb",
+    "solid": true
+  },
+  {
+    "id": "healthbox",
+    "name": "Health Box",
+    "model": "objects/healthbox.glb",
+    "solid": true
+  },
+  {
+    "id": "shells",
+    "name": "Shell Casings",
+    "model": "objects/shells.glb"
+  },
+  {
+    "id": "torch_wall",
+    "name": "Wall Torch",
+    "model": "objects/torch_wall.glb"
+  },
+  {
+    "id": "health_potion",
+    "name": "Health Potion",
+    "model": "objects/health_potion.glb"
+  },
+  {
+    "id": "scroll",
+    "name": "Scroll",
+    "model": "objects/scroll.glb"
+  },
+  {
+    "id": "scroll_enchant",
+    "name": "Enchant Scroll",
+    "model": "objects/scroll_enchant.glb"
+  },
+  {
+    "id": "scroll_enchant_armor",
+    "name": "Enchant Armor Scroll",
+    "model": "objects/scroll_enchant_armor.glb"
+  },
+  {
+    "id": "coin_pile",
+    "name": "Coin Pile",
+    "model": "objects/coin_pile_spill.glb"
+  },
+  {
+    "id": "iron_sword",
+    "name": "Iron Sword",
+    "model": "weapons/sword.glb"
+  },
+  {
+    "id": "goblin_sword",
+    "name": "Goblin Sword",
+    "model": "weapons/goblin_sword.glb"
+  },
+  {
+    "id": "small_sword",
+    "name": "Small Sword",
+    "model": "weapons/small_sword.glb"
+  },
+  {
+    "id": "spear",
+    "name": "Spear",
+    "model": "weapons/spear.glb"
+  },
+  {
+    "id": "torch",
+    "name": "Torch",
+    "model": "weapons/torch.glb"
+  }
+]
