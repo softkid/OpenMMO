@@ -82,7 +82,7 @@ pub const NPC_TOKEN_FILENAME: &str = "npc_token";
 ///      wearer's cape.
 /// v32: `Character.equipment`, so character select renders each character's
 ///      weapon, off-hand and cape.
-pub const PROTOCOL_VERSION: u32 = 32;
+pub const PROTOCOL_VERSION: u32 = 103;
 
 /// WebSocket close code sent when the handshake is refused (wrong protocol
 /// version, or traffic before `ClientInfo`). Lives outside the serialized
