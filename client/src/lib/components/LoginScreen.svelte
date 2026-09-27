@@ -49,8 +49,6 @@
         errorMessage = result.message ?? 'Authentication failed'
       }
     } catch (e) {
-      // onLogin can reject (e.g. WASM init failure) — without this the button
-      // stays disabled with no message.
       errorMessage = e instanceof Error ? e.message : 'Authentication failed'
     } finally {
       isConnecting = false
@@ -59,9 +57,6 @@
 
   onMount(async () => {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined
-    // Comparing against the container build's placeholder is not possible here:
-    // Vite inlines this, so the check would fold to a constant and let the
-    // minifier drop the placeholder the entrypoint has to substitute.
     if (!clientId) {
       errorMessage = 'VITE_GOOGLE_CLIENT_ID is not configured'
       return
@@ -87,7 +82,6 @@
       itp_support: true,
       use_fedcm_for_prompt: true,
     })
-    // Auto sign-in for returning users; button below is the fallback.
     googleId.prompt()
     googleId.renderButton(buttonContainer, {
       theme: 'filled_blue',
@@ -100,49 +94,34 @@
 </script>
 
 <div class="login-container">
-  <a
-    class="github-link"
-    href="https://github.com/Julian-adv/OpenMMO"
-    target="_blank"
-    rel="noopener noreferrer"
-    aria-label="GitHub repository"
-  >
-    <svg viewBox="0 0 16 16" width="28" height="28" fill="currentColor">
-      <path
-        d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"
-      />
-    </svg>
-  </a>
-  <div class="login-wrapper">
-    <svg
-      class="arch-title"
-      viewBox="-160 -80 1320 500"
-      xmlns="http://www.w3.org/2000/svg"
+  <header class="top-header">
+    <div class="brand-logo">
+      <span class="brand-tag">HAHAOGAMES</span>
+      <span class="brand-divider">/</span>
+      <span class="brand-sub">MMORPG</span>
+    </div>
+    <a
+      class="github-link"
+      href="https://github.com/softkid/OpenMMO"
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="GitHub repository"
     >
-      <defs>
-        <path id="archPath" d="M -20,360 Q 500,90 1020,360" fill="none" />
-        <pattern
-          id="flowerPattern"
-          patternUnits="userSpaceOnUse"
-          width="256"
-          height="256"
-        >
-          <image href="/textures/flowerx4.png" width="256" height="256" />
-        </pattern>
-      </defs>
-      <text stroke="white" stroke-width="3" paint-order="stroke">
-        <textPath
-          href="#archPath"
-          startOffset="50%"
-          text-anchor="middle"
-          dominant-baseline="auto"
-          fill="url(#flowerPattern)"
-          font-family="'Black Han Sans', sans-serif"
-          font-size="200">Open<tspan dx="40">MMO</tspan></textPath
-        >
-      </text>
-    </svg>
-    <h1 class="title">OpenMMO</h1>
+      <svg viewBox="0 0 16 16" width="20" height="20" fill="currentColor">
+        <path
+          d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"
+        />
+      </svg>
+      <span>GitHub Repo</span>
+    </a>
+  </header>
+
+  <div class="login-wrapper">
+    <div class="hero-branding">
+      <div class="hero-badge">✨ HAHAOGAMES ORIGINAL PROJECT</div>
+      <h1 class="main-title">HAHAO WORLD</h1>
+      <p class="tagline">경계 없는 3D 웹 오픈월드 MMORPG – 새로운 모험의 시작</p>
+    </div>
 
     <div class="login-panel">
       {#if kickedMessage}
@@ -156,12 +135,39 @@
       <div class="google-signin" class:connecting={isConnecting}>
         <div bind:this={buttonContainer}></div>
         {#if isConnecting}
-          <div class="connecting-label">Connecting...</div>
+          <div class="connecting-label">서버에 접속하는 중입니다...</div>
         {/if}
       </div>
     </div>
 
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">⚔️</div>
+        <h3 class="feature-title">실시간 WebGL 3D 오픈월드</h3>
+        <p class="feature-desc">클라이언트 설치 없이 웹 브라우저로 즉시 입장하는 광활한 3D 대륙과 전투</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🤖</div>
+        <h3 class="feature-title">AI 에이전트 자율 방치 시스템</h3>
+        <p class="feature-desc">지능형 스마트 가디언 에이전트와 동행하며 탐험하는 자율 파밍 시스템</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🛡️</div>
+        <h3 class="feature-title">노파괴 자원 인챈트 & 거래소</h3>
+        <p class="feature-desc">장비 파괴 없는 스트레스 제로 보전 인챈트 및 유저 간 이코노미</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🏰</div>
+        <h3 class="feature-title">실시간 레이드 & 커뮤니티</h3>
+        <p class="feature-desc">세계관 속 보스 몬스터 소탕과 협동 파티 플레이 시스템</p>
+      </div>
+    </div>
+
     <AnnouncementsPanel />
+
+    <footer class="login-footer">
+      <p>© 2026 HAHAOGAMES. Core Engine Powered by <a href="https://github.com/softkid/OpenMMO" target="_blank" rel="noopener noreferrer">OpenMMO Architecture</a></p>
+    </footer>
   </div>
 </div>
 
@@ -174,72 +180,146 @@
     max-width: 100vw;
     height: 100vh;
     height: 100dvh;
-    padding: max(14px, env(safe-area-inset-top))
-      max(14px, env(safe-area-inset-right))
-      max(58px, calc(env(safe-area-inset-bottom) + 58px))
-      max(14px, env(safe-area-inset-left));
+    padding: 70px 20px 40px 20px;
     overflow-x: hidden;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    justify-content: center;
     align-items: center;
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    background: radial-gradient(circle at 50% 20%, #1e1b4b 0%, #0f172a 45%, #020617 100%);
     -webkit-overflow-scrolling: touch;
+    font-family: 'Noto Sans KR', 'Outfit', -apple-system, sans-serif;
+  }
+
+  .top-header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    padding: 0 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    z-index: 10;
+  }
+
+  .brand-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 900;
+    letter-spacing: 1px;
+  }
+
+  .brand-tag {
+    color: #fbbf24;
+    font-family: 'Cinzel', serif;
+    font-size: 16px;
+    text-shadow: 0 0 10px rgba(251, 191, 36, 0.4);
+  }
+
+  .brand-divider {
+    color: #475569;
+    font-size: 14px;
+  }
+
+  .brand-sub {
+    color: #94a3b8;
+    font-size: 13px;
+    letter-spacing: 2px;
   }
 
   .github-link {
-    position: absolute;
-    top: max(14px, env(safe-area-inset-top));
-    right: max(14px, env(safe-area-inset-right));
     display: flex;
-    padding: 8px;
-    color: #a0aec0;
-    transition: color 0.15s;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #cbd5e1;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
   }
 
   .github-link:hover {
+    background: rgba(255, 255, 255, 0.15);
     color: #fff;
+    border-color: #fbbf24;
+    box-shadow: 0 0 12px rgba(251, 191, 36, 0.2);
   }
 
   .login-wrapper {
-    width: min(800px, 100%);
-    min-width: 0;
-    max-height: 100%;
+    width: min(900px, 100%);
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    gap: 28px;
+    margin: auto 0;
   }
 
-  .arch-title {
-    width: min(800px, 100%);
-    height: auto;
-    aspect-ratio: 1320 / 500;
-    margin-bottom: -20px;
-    filter: drop-shadow(0 4px 16px rgba(0, 0, 0, 0.6));
-  }
-
-  .title {
-    margin: 0 0 20px 0;
-    color: #a0aec0;
-    font-size: 18px;
-    font-weight: 400;
+  .hero-branding {
     text-align: center;
-    letter-spacing: 6px;
-    font-family:
-      -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .hero-badge {
+    display: inline-block;
+    padding: 4px 14px;
+    border-radius: 20px;
+    background: rgba(168, 85, 247, 0.15);
+    border: 1px solid rgba(168, 85, 247, 0.4);
+    color: #c084fc;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+    text-shadow: 0 0 8px rgba(192, 132, 252, 0.4);
+  }
+
+  .main-title {
+    margin: 0;
+    font-family: 'Cinzel', 'Black Han Sans', serif;
+    font-size: clamp(38px, 6vw, 64px);
+    font-weight: 900;
+    background: linear-gradient(135deg, #ffffff 20%, #fef08a 60%, #eab308 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: 4px;
+    filter: drop-shadow(0 4px 20px rgba(234, 179, 8, 0.3));
+  }
+
+  .tagline {
+    margin: 8px 0 0 0;
+    color: #94a3b8;
+    font-size: clamp(14px, 2vw, 17px);
+    font-weight: 400;
+    letter-spacing: 1px;
   }
 
   .login-panel {
     box-sizing: border-box;
-    width: min(480px, 100%);
-    min-width: 0;
-    padding: 40px;
-    background: rgba(0, 0, 0, 0.8);
-    border: 1px solid #4a5568;
-    border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    width: min(440px, 100%);
+    padding: 32px 28px;
+    background: rgba(15, 23, 42, 0.75);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    border-radius: 16px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    transition: transform 0.2s ease, border-color 0.2s ease;
+  }
+
+  .login-panel:hover {
+    border-color: rgba(251, 191, 36, 0.5);
+    transform: translateY(-2px);
   }
 
   .google-signin {
@@ -256,10 +336,8 @@
   }
 
   .connecting-label {
-    color: #a0aec0;
-    font-size: 13px;
-    font-family:
-      -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: #cbd5e1;
+    font-size: 14px;
   }
 
   .kicked-message {
@@ -267,14 +345,10 @@
     padding: 12px 14px;
     background: rgba(236, 201, 75, 0.15);
     border: 1px solid #ecc94b;
-    border-radius: 6px;
+    border-radius: 8px;
     color: #ecc94b;
     font-size: 13px;
     text-align: center;
-    font-family:
-      -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    user-select: text;
-    -webkit-user-select: text;
   }
 
   .error-message {
@@ -282,58 +356,99 @@
     padding: 10px 14px;
     background: rgba(245, 101, 101, 0.2);
     border: 1px solid #fc8181;
-    border-radius: 6px;
+    border-radius: 8px;
     color: #fc8181;
     font-size: 13px;
-    font-family:
-      -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    user-select: text;
-    -webkit-user-select: text;
+    text-align: center;
   }
 
-  @media (max-width: 600px), (max-height: 700px) {
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+    width: 100%;
+    margin-top: 8px;
+  }
+
+  .feature-card {
+    padding: 16px 14px;
+    background: rgba(30, 41, 59, 0.5);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    transition: all 0.2s ease;
+  }
+
+  .feature-card:hover {
+    background: rgba(30, 41, 59, 0.8);
+    border-color: rgba(168, 85, 247, 0.4);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  }
+
+  .feature-icon {
+    font-size: 24px;
+    margin-bottom: 8px;
+  }
+
+  .feature-title {
+    margin: 0 0 6px 0;
+    color: #f1f5f9;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .feature-desc {
+    margin: 0;
+    color: #94a3b8;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  .login-footer {
+    margin-top: 12px;
+    color: #64748b;
+    font-size: 12px;
+    text-align: center;
+  }
+
+  .login-footer a {
+    color: #94a3b8;
+    text-decoration: underline;
+  }
+
+  .login-footer a:hover {
+    color: #fbbf24;
+  }
+
+  @media (max-width: 600px) {
     .login-container {
-      padding: max(10px, env(safe-area-inset-top))
-        max(10px, env(safe-area-inset-right))
-        max(52px, calc(env(safe-area-inset-bottom) + 52px))
-        max(10px, env(safe-area-inset-left));
+      padding-top: 64px;
     }
 
-    .arch-title {
-      width: min(340px, 100%);
-      margin-bottom: -12px;
+    .main-title {
+      font-size: 34px;
     }
 
-    .title {
-      margin-bottom: 12px;
+    .features-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .feature-card {
+      padding: 12px 10px;
+    }
+
+    .feature-title {
       font-size: 13px;
-      letter-spacing: 4px;
     }
 
-    .login-panel {
-      width: min(320px, 100%);
-      padding: 18px;
-      border-radius: 8px;
-    }
-
-    .kicked-message {
-      margin-bottom: 14px;
-      padding: 10px 12px;
-    }
-  }
-
-  @media (max-height: 560px) {
-    .login-container {
-      justify-content: flex-start;
-    }
-
-    .arch-title {
-      width: min(320px, 100%);
-      margin-bottom: -10px;
-    }
-
-    .login-panel {
-      padding: 16px;
+    .feature-desc {
+      font-size: 11px;
     }
   }
 </style>
