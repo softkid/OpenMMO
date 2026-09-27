@@ -361,6 +361,11 @@ impl super::GameState {
             return;
         }
 
+        if message.trim() == "/history" {
+            self.send_trade_history(player_id, auth).await;
+            return;
+        }
+
         // Handle /give command
         if let Some(item_id) = message.strip_prefix("/give ") {
             let item_id = item_id.trim();

@@ -76,11 +76,11 @@ fn armor_enchant_success_bp(enchant: i32) -> u32 {
 fn enchant_attempt_fee_copper(enchant: i32) -> i64 {
     match enchant {
         ..=7 => 0,
-        8 => 500,      // 5s
-        9 => 1_500,    // 15s
-        10 => 5_000,   // 50s
-        11 => 15_000,  // 1g 50s
-        _ => 50_000,   // 5g flat from +12 onward
+        8 => 500,     // 5s
+        9 => 1_500,   // 15s
+        10 => 5_000,  // 50s
+        11 => 15_000, // 1g 50s
+        _ => 50_000,  // 5g flat from +12 onward
     }
 }
 
@@ -1038,7 +1038,9 @@ impl super::GameState {
                 ladder: armor_enchant_success_bp,
                 no_target: "You have no armor worn to enchant",
                 failed: |name| {
-                    format!("The runes flare and fade without taking hold — your {name} is unharmed.")
+                    format!(
+                        "The runes flare and fade without taking hold — your {name} is unharmed."
+                    )
                 },
                 honed: |name, enchant| {
                     format!("The runes sink into your {name}, hardening it. (+{enchant})")

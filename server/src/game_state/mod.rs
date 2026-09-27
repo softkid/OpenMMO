@@ -247,6 +247,7 @@ mod passability;
 mod player;
 mod player_trade;
 pub(crate) use player::{restored_floor_level, MoveCommand};
+mod provenance;
 mod salary;
 mod skills;
 pub(crate) use skills::skills_from_rows;

@@ -320,7 +320,10 @@ impl super::GameState {
             Ok(params) => params,
             Err(why) => return reject(why).await,
         };
-        let half_band = base_half_band + self.rapport_bonus_for(target_player_id, &merchant_name).await;
+        let half_band = base_half_band
+            + self
+                .rapport_bonus_for(target_player_id, &merchant_name)
+                .await;
         let applied = modifier_pct.clamp(-half_band, half_band);
         let cost = deal_cost(base_price, rate, kind, applied);
 

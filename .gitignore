@@ -18,8 +18,8 @@ tools/glb-editor/vite.config.d.ts
 # Rust (workspace)
 target/
 
-# Wasm build output (committed for CI / Cloudflare Pages)
-!client/src/lib/wasm/
+# Wasm build output
+client/src/lib/wasm/
 
 # IDE
 .vscode/

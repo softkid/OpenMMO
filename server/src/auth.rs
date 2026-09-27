@@ -182,6 +182,25 @@ pub struct TradeLedgerEntry {
     pub b_items: String,
 }
 
+/// One row of `trade_history_for`, already normalized to "my side" —
+/// whichever of `a`/`b` the queried character was in the underlying
+/// `player_trades` row is resolved away, so the caller never has to think
+/// about it. See doc/PROVENANCE.md.
+#[derive(Debug, Clone)]
+pub struct TradeHistoryRow {
+    pub traded_at: i64,
+    /// "(former player)" if that character has since been deleted — the
+    /// ledger row itself is never deleted (doc/TRADE.md: no foreign key,
+    /// on purpose).
+    pub counterparty_name: String,
+    pub my_gold_before: i64,
+    pub my_gold_after: i64,
+    /// JSON array of `{"def","qty","ench"}` — what this character gave up.
+    pub my_items_given: String,
+    /// Same shape — what this character received.
+    pub items_received: String,
+}
+
 /// Column list shared between queries that return full CharacterRecord rows.
 const CHARACTER_COLUMNS: &str = "id, character_name, created_at, level, xp, max_hp, attr_str, attr_dex, attr_con, attr_int, attr_wis, attr_cha, attr_guard, class, last_x, last_y, last_z, last_rotation, health, floor_level, gender, gold, admin_role, satiation, logged_out_at";
 
@@ -1479,6 +1498,54 @@ impl AuthService {
         )?;
         tx.commit()?;
         Ok(())
+    }
+
+    /// This character's own trade ledger, newest first — read-only access to
+    /// the same permanent rows `commit_trade` writes in the same transaction
+    /// as the trade itself (doc/TRADE.md), so nothing returned here can have
+    /// been edited or backdated after the fact. The "Play-and-own"
+    /// transparency layer: doc/PROVENANCE.md.
+    ///
+    /// `LEFT JOIN` because the ledger deliberately keeps no foreign key to
+    /// `characters` (a deleted character must not erase what they traded
+    /// away) — a vanished counterparty resolves to `NULL` and is handled by
+    /// the caller, not here.
+    pub fn trade_history_for(
+        &self,
+        character_id: i64,
+        limit: i64,
+    ) -> Result<Vec<TradeHistoryRow>, AuthError> {
+        let conn = self.open_connection()?;
+        let mut stmt = conn.prepare(
+            "SELECT
+                pt.traded_at,
+                CASE WHEN pt.a_character_id = ?1 THEN cb.character_name ELSE ca.character_name END,
+                CASE WHEN pt.a_character_id = ?1 THEN pt.a_gold_before ELSE pt.b_gold_before END,
+                CASE WHEN pt.a_character_id = ?1 THEN pt.a_gold_after ELSE pt.b_gold_after END,
+                CASE WHEN pt.a_character_id = ?1 THEN pt.a_items ELSE pt.b_items END,
+                CASE WHEN pt.a_character_id = ?1 THEN pt.b_items ELSE pt.a_items END
+             FROM player_trades pt
+             LEFT JOIN characters ca ON ca.id = pt.a_character_id
+             LEFT JOIN characters cb ON cb.id = pt.b_character_id
+             WHERE pt.a_character_id = ?1 OR pt.b_character_id = ?1
+             ORDER BY pt.traded_at DESC
+             LIMIT ?2",
+        )?;
+        let rows = stmt
+            .query_map(params![character_id, limit], |row| {
+                Ok(TradeHistoryRow {
+                    traded_at: row.get(0)?,
+                    counterparty_name: row
+                        .get::<_, Option<String>>(1)?
+                        .unwrap_or_else(|| "(former player)".to_string()),
+                    my_gold_before: row.get(2)?,
+                    my_gold_after: row.get(3)?,
+                    my_items_given: row.get(4)?,
+                    items_received: row.get(5)?,
+                })
+            })?
+            .collect::<Result<Vec<_>, _>>()?;
+        Ok(rows)
     }
 
     pub fn load_world_time(&self) -> Result<Option<GameDateTime>, AuthError> {

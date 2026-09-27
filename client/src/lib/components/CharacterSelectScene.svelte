@@ -337,7 +337,7 @@
   <T.Mesh
     position={[SLOT_POSITIONS[slotIndex], SLOT_DISC_Y, SLOT_DEPTH]}
     receiveShadow
-    onpointerdown={(e) => startSlotDrag(slotIndex, e)}
+    onpointerdown={(e: IntersectionEvent<PointerEvent>) => startSlotDrag(slotIndex, e)}
     onclick={() => onSlotClick(slotIndex)}
     ondblclick={() => !precededByDrag() && onSlotDoubleClick(slotIndex)}
   >
@@ -354,7 +354,7 @@
 
   <T.Mesh
     position={[SLOT_POSITIONS[slotIndex], SLOT_HITBOX_HEIGHT / 2, SLOT_DEPTH]}
-    onpointerdown={(e) => startSlotDrag(slotIndex, e)}
+    onpointerdown={(e: IntersectionEvent<PointerEvent>) => startSlotDrag(slotIndex, e)}
     onclick={() => onSlotClick(slotIndex)}
     ondblclick={() => !precededByDrag() && onSlotDoubleClick(slotIndex)}
   >
