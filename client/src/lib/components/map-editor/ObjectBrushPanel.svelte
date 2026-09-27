@@ -450,8 +450,8 @@
               class="text-input"
               rows="2"
               placeholder={selectedDef?.procedural
-                ? 'Sign text…'
-                : 'Shown on hover…'}
+                ? 'Sign text...'
+                : 'Shown on hover...'}
               bind:value={textDraft}
               onchange={flushTextDraft}
               onblur={flushTextDraft}></textarea>
@@ -462,7 +462,7 @@
           onclick={flattenTerrain}
           disabled={flattening || !heightManager}
         >
-          {flattening ? 'Flattening…' : 'Flatten Terrain'}
+          {flattening ? 'Flattening...' : 'Flatten Terrain'}
         </button>
         <button class="delete-btn" onclick={deletePlacement}>Delete</button>
       </div>
