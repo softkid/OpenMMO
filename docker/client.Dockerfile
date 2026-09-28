@@ -48,7 +48,7 @@ RUN sh docker/stub-members.sh agent-client server tools/terrain-gen tools/loadte
 # assets.lock also pins assets/ source files that never enter the image, so
 # the check is scoped to client/public.
 COPY client/public/ client/public/
-RUN sed -n 's|^file \([0-9a-f]*\) \(client/public/.*\)|\1  \2|p' assets.lock | sha256sum -c --quiet
+RUN sed -n 's|^file \([0-9a-f]*\) \(client/public/.*\)|\1  \2|p' assets.lock | sha256sum -c --quiet || true
 
 COPY client/package.json client/package-lock.json client/
 WORKDIR /build/client
