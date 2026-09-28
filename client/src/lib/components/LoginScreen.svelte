@@ -107,7 +107,7 @@
           href="https://hahaogames.com"
           target="_blank"
           rel="noopener noreferrer"
-        >홈페이지</a>
+        >Home</a>
         <a
           class="nav-link"
           href="https://github.com/softkid/OpenMMO"
@@ -129,7 +129,7 @@
     <div class="hero-tags">
       <span class="pill"><i class="dot purple"></i>3D MMORPG</span>
       <span class="pill"><i class="dot blue"></i>WebGL / WebGPU</span>
-      <span class="pill"><i class="dot green"></i>설치 없이 플레이</span>
+      <span class="pill"><i class="dot green"></i>Instant Play</span>
     </div>
 
     <h1 class="hero-title">
@@ -137,7 +137,7 @@
       <span class="title-line-2 grad-ring-text">WORLD</span>
     </h1>
 
-    <p class="hero-lede">경계 없는 웹 오픈월드 MMORPG — 브라우저에서 바로 입장하는 새로운 모험의 시작</p>
+    <p class="hero-lede">Seamless Web Open-World MMORPG — Embark on a new adventure directly from your browser</p>
 
     <div class="login-card glass">
       {#if kickedMessage}
@@ -153,7 +153,7 @@
         {#if isConnecting}
           <div class="connecting-label">
             <span class="spinner"></span>
-            서버에 접속하는 중입니다...
+            Connecting to server...
           </div>
         {/if}
       </div>
@@ -162,23 +162,23 @@
     <div class="features-grid">
       <div class="feature-card glass">
         <div class="feature-icon-wrap" style="--accent: #8a2bf9;">⚔️</div>
-        <h3 class="feature-title">실시간 3D 오픈월드</h3>
-        <p class="feature-desc">브라우저만으로 즉시 입장하는 광활한 3D 대륙</p>
+        <h3 class="feature-title">Real-Time 3D Open World</h3>
+        <p class="feature-desc">Explore a vast 3D continent directly in your web browser</p>
       </div>
       <div class="feature-card glass">
         <div class="feature-icon-wrap" style="--accent: #0480e5;">🤖</div>
-        <h3 class="feature-title">AI 에이전트 시스템</h3>
-        <p class="feature-desc">지능형 가디언 에이전트와 자율 파밍</p>
+        <h3 class="feature-title">AI Agent System</h3>
+        <p class="feature-desc">Intelligent guardian agents & autonomous farming</p>
       </div>
       <div class="feature-card glass">
         <div class="feature-icon-wrap" style="--accent: #3cb521;">🛡️</div>
-        <h3 class="feature-title">노파괴 인챈트</h3>
-        <p class="feature-desc">스트레스 제로 보전 인챈트 및 거래</p>
+        <h3 class="feature-title">No-Destruction Enhancing</h3>
+        <p class="feature-desc">Stress-free item enhancement & trading</p>
       </div>
       <div class="feature-card glass">
         <div class="feature-icon-wrap" style="--accent: #fc3033;">🏰</div>
-        <h3 class="feature-title">실시간 레이드</h3>
-        <p class="feature-desc">보스 소탕과 협동 파티 플레이</p>
+        <h3 class="feature-title">Real-Time Raids</h3>
+        <p class="feature-desc">Epic boss battles & co-op party play</p>
       </div>
     </div>
 
