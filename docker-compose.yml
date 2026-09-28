@@ -4,7 +4,7 @@ name: openmmo
 # is available and falls back to building locally, so the stack comes up on a
 # clean host before anything has been pushed to GHCR.
 x-server-image: &server-image
-  image: ${IMAGE_BASE:-ghcr.io/julian-adv}/openmmo-server:${TAG:-latest}
+  image: ${IMAGE_BASE:-ghcr.io/softkid}/openmmo-server:${TAG:-latest}
   build:
     context: .
     dockerfile: docker/server.Dockerfile
@@ -57,7 +57,7 @@ services:
     restart: unless-stopped
 
   client:
-    image: ${IMAGE_BASE:-ghcr.io/julian-adv}/openmmo-client:${TAG:-latest}
+    image: ${IMAGE_BASE:-ghcr.io/softkid}/openmmo-client:${TAG:-latest}
     build:
       context: .
       dockerfile: docker/client.Dockerfile
@@ -78,7 +78,7 @@ services:
   # state. Start with `docker compose --profile agent up`.
   agent-client:
     profiles: [agent]
-    image: ${IMAGE_BASE:-ghcr.io/julian-adv}/openmmo-agent-client:${AGENT_TAG:-latest}
+    image: ${IMAGE_BASE:-ghcr.io/softkid}/openmmo-agent-client:${AGENT_TAG:-latest}
     build:
       context: .
       dockerfile: docker/agent-client.Dockerfile

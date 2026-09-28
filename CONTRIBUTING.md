@@ -5,7 +5,7 @@ Contributions are welcome — this guide collects the practical details that are
 ## Before you start
 
 - [doc/TODO.md](doc/TODO.md) is the maintainer's backlog and the best source of work that is wanted. Verify against the current code that the item is still open — the list moves fast.
-- Check [open pull requests](https://github.com/Julian-adv/OpenMMO/pulls) before starting: several contributors work in parallel, and an item can be claimed between one day and the next.
+- Check [open pull requests](https://github.com/softkid/OpenMMO/pulls) before starting: several contributors work in parallel, and an item can be claimed between one day and the next.
 - For larger changes (new systems, UI, design decisions), open an issue describing the approach first.
 
 ## Development setup

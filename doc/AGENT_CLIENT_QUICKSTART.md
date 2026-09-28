@@ -29,7 +29,7 @@ cd .\agent-client-*-x86_64-windows-msvc
 준비물이 없고, 게임 데이터는 빌드가 알아서 생성한다.
 
 ```bash
-git clone https://github.com/Julian-adv/OpenMMO.git
+git clone https://github.com/softkid/OpenMMO.git
 cd OpenMMO
 cargo build --release -p agent-client
 ```

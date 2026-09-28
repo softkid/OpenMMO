@@ -24,7 +24,7 @@
 `master` 브랜치/태그 푸시마다 서버를 빌드해서
 `ghcr.io/<계정>/openmmo-server`에 멀티아키텍처(amd64/arm64) 이미지로
 퍼블리시한다. `docker-compose.yml`도 이미 이 이미지를 기본값으로 쓰도록
-돼 있다(`IMAGE_BASE:-ghcr.io/julian-adv`).
+돼 있다(`IMAGE_BASE:-ghcr.io/softkid`).
 
 가장 빠른 경로:
 1. 이 zip(또는 수정한 포크)을 본인 GitHub 저장소에 푸시한다.

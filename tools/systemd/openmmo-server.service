@@ -1,6 +1,6 @@
 [Unit]
 Description=OpenMMO game server
-Documentation=https://github.com/Julian-adv/OpenMMO
+Documentation=https://github.com/softkid/OpenMMO
 After=network-online.target
 Wants=network-online.target
 # Don't give up if the server crash-loops during a bad deploy.
