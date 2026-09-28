@@ -18,8 +18,8 @@ services:
     entrypoint: ["/usr/local/bin/terrain-bake.sh"]
     environment:
       TERRAIN_DIR: /terrain
-      TERRAIN_REGION_MIN: ${TERRAIN_REGION_MIN:--2}
-      TERRAIN_REGION_MAX: ${TERRAIN_REGION_MAX:-1}
+      TERRAIN_REGION_MIN: ${TERRAIN_REGION_MIN:--4}
+      TERRAIN_REGION_MAX: ${TERRAIN_REGION_MAX:-3}
       TERRAIN_FORCE_BAKE: ${TERRAIN_FORCE_BAKE:-}
     volumes:
       - terrain:/terrain
