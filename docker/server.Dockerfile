@@ -27,12 +27,13 @@ COPY client/public/models/objects/catalog.json client/public/models/objects/
 COPY tools/cargo-build-data.rs tools/
 COPY data-src/ data-src/
 
-# agent-client is a workspace member, so cargo needs its manifest to resolve the
-# workspace at all. Stub the sources instead of copying them: a stub keeps this
-# image's cache from busting on unrelated agent-client edits.
+# agent-client and tools/loadtest are workspace members, so cargo needs their
+# manifests to resolve the workspace at all. Stub the sources instead of copying
+# them: a stub keeps this image's cache from busting on unrelated edits.
 COPY agent-client/Cargo.toml agent-client/
+COPY tools/loadtest/Cargo.toml tools/loadtest/
 COPY docker/stub-members.sh docker/
-RUN sh docker/stub-members.sh agent-client
+RUN sh docker/stub-members.sh agent-client tools/loadtest
 
 # The cache mounts keep dependency compiles out of the layer, so the binaries
 # must be copied out within the same RUN.

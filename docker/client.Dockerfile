@@ -39,8 +39,9 @@ COPY agent-client/data/animation_durations.json agent-client/data/
 COPY agent-client/Cargo.toml agent-client/
 COPY server/Cargo.toml server/
 COPY tools/terrain-gen/Cargo.toml tools/terrain-gen/
+COPY tools/loadtest/Cargo.toml tools/loadtest/
 COPY docker/stub-members.sh docker/
-RUN sh docker/stub-members.sh agent-client server tools/terrain-gen
+RUN sh docker/stub-members.sh agent-client server tools/terrain-gen tools/loadtest
 
 # The public assets are ~750 MB and change rarely; keeping them (and their
 # checksum pass) in their own layers means source edits reuse the cache.
