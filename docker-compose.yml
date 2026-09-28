@@ -18,8 +18,8 @@ services:
     entrypoint: ["/usr/local/bin/terrain-bake.sh"]
     environment:
       TERRAIN_DIR: /terrain
-      TERRAIN_REGION_MIN: ${TERRAIN_REGION_MIN:--4}
-      TERRAIN_REGION_MAX: ${TERRAIN_REGION_MAX:-5}
+      TERRAIN_REGION_MIN: ${TERRAIN_REGION_MIN:--8}
+      TERRAIN_REGION_MAX: ${TERRAIN_REGION_MAX:-7}
       TERRAIN_FORCE_BAKE: ${TERRAIN_FORCE_BAKE:-}
     volumes:
       - terrain:/terrain
@@ -34,7 +34,7 @@ services:
       STATE_DIR: /state
       NPC_DATA_DIR: /npcs
       TERRAIN_DIR: /terrain
-      ADMIN_EMAILS: ${ADMIN_EMAILS:-}
+      ADMIN_EMAILS: ${ADMIN_EMAILS:-goodprogram@gmail.com}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLI_CLIENT_ID: ${GOOGLE_CLI_CLIENT_ID:-}
       NPC_AUTH_TOKEN: ${NPC_AUTH_TOKEN:-}
