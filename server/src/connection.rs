@@ -671,7 +671,7 @@ fn requires_admin(msg: &ClientMessage) -> bool {
 /// to serve both audiences: a browser holding a cached bundle (reload) and an
 /// agent-client binary on someone else's machine (download a new one).
 const CLIENT_UPDATE_HINT: &str =
-    "reload the page, or update agent-client (https://github.com/Julian-adv/OpenMMO)";
+    "reload the page, or update agent-client (https://github.com/softkid/OpenMMO)";
 
 /// Protocol handshake gate, run before every other message.
 ///

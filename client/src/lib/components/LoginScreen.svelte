@@ -102,7 +102,7 @@
 <div class="login-container">
   <a
     class="github-link"
-    href="https://github.com/Julian-adv/OpenMMO"
+    href="https://github.com/softkid/OpenMMO"
     target="_blank"
     rel="noopener noreferrer"
     aria-label="GitHub repository"

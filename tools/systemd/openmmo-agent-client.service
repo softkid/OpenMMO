@@ -1,6 +1,6 @@
 [Unit]
 Description=OpenMMO agent client (LLM-driven NPCs)
-Documentation=https://github.com/Julian-adv/OpenMMO
+Documentation=https://github.com/softkid/OpenMMO
 # Ordering only, no Requires= — the NPCs reconnect on their own, so a server
 # restart should not tear them down mid-session.
 After=network-online.target openmmo-server.service
