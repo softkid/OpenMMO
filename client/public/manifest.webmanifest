@@ -1,7 +1,7 @@
 {
-  "name": "HAHAO MMORPG",
-  "short_name": "HAHAO MMORPG",
-  "description": "Hahaogames Next-Gen Web 3D MMORPG",
+  "name": "OpenMMO",
+  "short_name": "OpenMMO",
+  "description": "OpenMMO online RPG",
   "start_url": "/",
   "scope": "/",
   "display": "fullscreen",

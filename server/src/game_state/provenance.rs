@@ -36,8 +36,11 @@ impl super::GameState {
             Ok(rows) => rows,
             Err(e) => {
                 tracing::warn!("trade history query failed for character {character_id}: {e}");
-                self.send_system_message(player_id, "Couldn't read your trade history right now.")
-                    .await;
+                self.send_system_message(
+                    player_id,
+                    "Couldn't read your trade history right now.",
+                )
+                .await;
                 return;
             }
         };

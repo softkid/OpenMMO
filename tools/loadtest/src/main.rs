@@ -116,10 +116,7 @@ async fn main() -> anyhow::Result<()> {
     }
 
     if cli.hold_secs == 0 {
-        info!(
-            "Holding indefinitely at {} bots — Ctrl-C to stop.",
-            cli.count
-        );
+        info!("Holding indefinitely at {} bots — Ctrl-C to stop.", cli.count);
         std::future::pending::<()>().await;
     } else {
         info!("Holding for {}s before exiting.", cli.hold_secs);

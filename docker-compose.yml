@@ -4,7 +4,7 @@ name: openmmo
 # is available and falls back to building locally, so the stack comes up on a
 # clean host before anything has been pushed to GHCR.
 x-server-image: &server-image
-  image: ${IMAGE_BASE:-ghcr.io/softkid}/openmmo-server:${TAG:-latest}
+  image: ${IMAGE_BASE:-ghcr.io/julian-adv}/openmmo-server:${TAG:-latest}
   build:
     context: .
     dockerfile: docker/server.Dockerfile
@@ -18,8 +18,15 @@ services:
     entrypoint: ["/usr/local/bin/terrain-bake.sh"]
     environment:
       TERRAIN_DIR: /terrain
-      TERRAIN_REGION_MIN: ${TERRAIN_REGION_MIN:--8}
-      TERRAIN_REGION_MAX: ${TERRAIN_REGION_MAX:-7}
+      # Full documented world (doc/TERRAIN_GENERATION.md: -16..15 both axes,
+      # 32x32 regions). Needs real disk — terrain-bake.sh estimates the
+      # requirement and refuses to start the bake rather than running out of
+      # space partway through; see doc/REFACTOR_2026-09.md for how that
+      # floor was computed. Short on disk? Override with a smaller range,
+      # e.g. `TERRAIN_REGION_MIN=-4 TERRAIN_REGION_MAX=3` for a 4x bigger
+      # patch than the old default at a fraction of the full world's space.
+      TERRAIN_REGION_MIN: ${TERRAIN_REGION_MIN:--16}
+      TERRAIN_REGION_MAX: ${TERRAIN_REGION_MAX:-15}
       TERRAIN_FORCE_BAKE: ${TERRAIN_FORCE_BAKE:-}
     volumes:
       - terrain:/terrain
@@ -34,7 +41,7 @@ services:
       STATE_DIR: /state
       NPC_DATA_DIR: /npcs
       TERRAIN_DIR: /terrain
-      ADMIN_EMAILS: ${ADMIN_EMAILS:-goodprogram@gmail.com}
+      ADMIN_EMAILS: ${ADMIN_EMAILS:-}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLI_CLIENT_ID: ${GOOGLE_CLI_CLIENT_ID:-}
       NPC_AUTH_TOKEN: ${NPC_AUTH_TOKEN:-}
@@ -57,7 +64,7 @@ services:
     restart: unless-stopped
 
   client:
-    image: ${IMAGE_BASE:-ghcr.io/softkid}/openmmo-client:${TAG:-latest}
+    image: ${IMAGE_BASE:-ghcr.io/julian-adv}/openmmo-client:${TAG:-latest}
     build:
       context: .
       dockerfile: docker/client.Dockerfile
@@ -69,14 +76,14 @@ services:
       server:
         condition: service_healthy
     ports:
-      - "${CLIENT_PORT:-80}:80"
+      - "${CLIENT_PORT:-8080}:80"
     restart: unless-stopped
 
   # Opt-in: needs agent-client/data/config.toml, which is gitignored deployment
   # state. Start with `docker compose --profile agent up`.
   agent-client:
     profiles: [agent]
-    image: ${IMAGE_BASE:-ghcr.io/softkid}/openmmo-agent-client:${AGENT_TAG:-latest}
+    image: ${IMAGE_BASE:-ghcr.io/julian-adv}/openmmo-agent-client:${AGENT_TAG:-latest}
     build:
       context: .
       dockerfile: docker/agent-client.Dockerfile

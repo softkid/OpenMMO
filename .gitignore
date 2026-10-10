@@ -3,7 +3,7 @@ node_modules/
 .env
 .env.local
 client/node_modules/
-!client/dist/
+client/dist/
 client/build/
 client/.svelte-kit/
 # Vite's pre-bundled dependency cache, rebuilt on demand
@@ -50,9 +50,6 @@ logs/
 *.glb
 *.mp3
 *.m4a
-!client/dist/**/*.mp3
-!client/dist/**/*.m4a
-!client/dist/**/*.glb
 *.blend
 # Raw source drops (Meshy obj zips, Mixamo fbx) — synced via HF too
 /assets/
@@ -96,7 +93,7 @@ agent-client/data/npcs/**/favor.json
 # Heightmap tiles fetched from the server (regenerable cache)
 agent-client/data/cache/
 # agent-client release archives (tools/package-agent-client.sh, .ps1)
-# /dist/
+/dist/
 
 # Claude Code (keep agents and commands for sharing)
 .claude/*

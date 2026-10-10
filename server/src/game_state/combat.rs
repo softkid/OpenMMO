@@ -631,7 +631,8 @@ impl super::GameState {
             self.party_vitals_dirty.write().await.extend(leveled);
         }
 
-        for (player_id, name, new_xp, new_level, leveled_up, max_hp, current_hp, awarded) in notices
+        for (player_id, name, new_xp, new_level, leveled_up, max_hp, current_hp, awarded) in
+            notices
         {
             self.send_direct_message(
                 &player_id,

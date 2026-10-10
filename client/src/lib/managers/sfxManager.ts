@@ -114,7 +114,8 @@ function playAudioFromPool(
   pools: Map<string, AudioPool>,
   url: string,
   volume: number,
-  poolSize: number
+  poolSize: number,
+  distanceFactor = 1
 ) {
   preloadAudioPool(pools, url, volume, poolSize)
 
@@ -124,7 +125,7 @@ function playAudioFromPool(
   const audio = pool.audios[pool.index]
   pool.index = (pool.index + 1) % pool.audios.length
 
-  const effectiveVolume = volume * getSfxMultiplier()
+  const effectiveVolume = volume * getSfxMultiplier() * distanceFactor
   if (effectiveVolume <= 0) return
 
   try {
@@ -153,25 +154,43 @@ export function preloadSwordMissSound() {
   }
 }
 
-export function playSwordHitSound(url = DEFAULT_MATERIAL_HIT_SOUND_URL) {
+// `distanceFactor` (1 = full volume, 0 = inaudible) lets a party member's
+// swing fade in with distance instead of either being silent (the old
+// local-player-only gate) or blasting at full volume regardless of where it
+// happened — see `monsterManager.ts`'s `attackSoundVolumeFactor`.
+export function playSwordHitSound(
+  url = DEFAULT_MATERIAL_HIT_SOUND_URL,
+  distanceFactor = 1
+) {
   if (!canUseAudio()) return
-  playAudioFromPool(swordHitPools, url, SWORD_HIT_VOLUME, SWORD_HIT_POOL_SIZE)
+  playAudioFromPool(
+    swordHitPools,
+    url,
+    SWORD_HIT_VOLUME,
+    SWORD_HIT_POOL_SIZE,
+    distanceFactor
+  )
 }
 
 export function playSwordMissSound(
   url = DEFAULT_MATERIAL_MISS_SOUND_URL,
-  delayMs = 0
+  delayMs = 0,
+  distanceFactor = 1
 ) {
   if (!canUseAudio()) return
   if (delayMs > 0) {
-    window.setTimeout(() => playSwordMissSound(url), delayMs)
+    window.setTimeout(
+      () => playSwordMissSound(url, 0, distanceFactor),
+      delayMs
+    )
     return
   }
   playAudioFromPool(
     swordMissPools,
     url,
     SWORD_MISS_VOLUME,
-    SWORD_MISS_POOL_SIZE
+    SWORD_MISS_POOL_SIZE,
+    distanceFactor
   )
 }
 

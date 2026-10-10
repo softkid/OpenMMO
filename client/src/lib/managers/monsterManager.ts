@@ -42,6 +42,29 @@ import {
 import behaviorTreesJson from '../../../../data-src/behavior_trees.json'
 import monstersJson from '../../../../data/monsters.json'
 
+// Combat sounds used to be gated to the local player's own swings only —
+// hearing nothing when a party member landed a hit. Full volume inside
+// melee range, fading to silent by 30m; the local player's own swings stay
+// at full volume exactly as before, since they're always well inside 8m.
+const SOUND_FULL_VOLUME_RADIUS_M = 8
+const SOUND_INAUDIBLE_RADIUS_M = 30
+
+function distanceVolumeFactor(
+  from: { x: number; y: number; z: number },
+  to: { x: number; y: number; z: number }
+): number {
+  const dx = from.x - to.x
+  const dy = from.y - to.y
+  const dz = from.z - to.z
+  const dist = Math.sqrt(dx * dx + dy * dy + dz * dz)
+  if (dist <= SOUND_FULL_VOLUME_RADIUS_M) return 1
+  if (dist >= SOUND_INAUDIBLE_RADIUS_M) return 0
+  const t =
+    (dist - SOUND_FULL_VOLUME_RADIUS_M) /
+    (SOUND_INAUDIBLE_RADIUS_M - SOUND_FULL_VOLUME_RADIUS_M)
+  return 1 - t
+}
+
 type MonsterState = MonsterData['state']
 
 interface AiCommand {
@@ -326,7 +349,11 @@ class MonsterManager {
   private playPendingSwordHitSound(monster: MonsterData) {
     if (!monster.pendingSwordHitSoundUrl) return
 
-    playSwordHitSound(monster.pendingSwordHitSoundUrl)
+    const localPosition = get(gameStore).currentPlayer?.position
+    const volumeFactor = localPosition
+      ? distanceVolumeFactor(localPosition, monster.position)
+      : 1
+    playSwordHitSound(monster.pendingSwordHitSoundUrl, volumeFactor)
     monster.pendingSwordHitSoundUrl = undefined
   }
 
@@ -378,13 +405,19 @@ class MonsterManager {
     monster.targetPlayerId = playerId
     monster.isLastHitSuccess = hit
     const isLocalPlayerAttack = playerId === get(gameStore).currentPlayer?.id
+    // Only the local player's own equipped weapon is known client-side — the
+    // `Player` entity other clients broadcast doesn't carry visible
+    // equipment (unlike `Character.equipment` server-side), so a party
+    // member's swing falls back to the default material sound rather than
+    // playing nothing. Extending that broadcast is the natural next step
+    // for exact per-weapon sounds on every attacker; see doc/SFX.md.
     const weaponItemDefId = isLocalPlayerAttack
       ? get(inventoryStore).equipped.main_hand?.item_def_id
       : undefined
     const weaponMaterial = weaponItemDefId
       ? getItemDef(weaponItemDefId)?.material
       : undefined
-    if (hit && isLocalPlayerAttack) {
+    if (hit) {
       const monsterMaterial = getMonsterDef(monster.type)?.material
       monster.pendingSwordHitSoundUrl = getMaterialHitSoundUrl(
         weaponMaterial,
@@ -392,11 +425,14 @@ class MonsterManager {
       )
     } else {
       monster.pendingSwordHitSoundUrl = undefined
-    }
-    if (!hit && isLocalPlayerAttack) {
+      const localPosition = get(gameStore).currentPlayer?.position
+      const volumeFactor = localPosition
+        ? distanceVolumeFactor(localPosition, monster.position)
+        : 1
       playSwordMissSound(
         getMaterialMissSoundUrl(weaponMaterial),
-        SWORD_MISS_DELAY_MS
+        SWORD_MISS_DELAY_MS,
+        volumeFactor
       )
     }
     // Temporarily store damage to show at impact

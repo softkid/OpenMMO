@@ -39,16 +39,15 @@ COPY agent-client/data/animation_durations.json agent-client/data/
 COPY agent-client/Cargo.toml agent-client/
 COPY server/Cargo.toml server/
 COPY tools/terrain-gen/Cargo.toml tools/terrain-gen/
-COPY tools/loadtest/Cargo.toml tools/loadtest/
 COPY docker/stub-members.sh docker/
-RUN sh docker/stub-members.sh agent-client server tools/terrain-gen tools/loadtest
+RUN sh docker/stub-members.sh agent-client server tools/terrain-gen
 
 # The public assets are ~750 MB and change rarely; keeping them (and their
 # checksum pass) in their own layers means source edits reuse the cache.
 # assets.lock also pins assets/ source files that never enter the image, so
 # the check is scoped to client/public.
 COPY client/public/ client/public/
-RUN sed -n 's|^file \([0-9a-f]*\) \(client/public/.*\)|\1  \2|p' assets.lock | sha256sum -c --quiet || true
+RUN sed -n 's|^file \([0-9a-f]*\) \(client/public/.*\)|\1  \2|p' assets.lock | sha256sum -c --quiet
 
 COPY client/package.json client/package-lock.json client/
 WORKDIR /build/client
