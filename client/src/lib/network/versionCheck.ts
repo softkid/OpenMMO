@@ -3,7 +3,9 @@ const RELOAD_GUARD_KEY = 'openmmo.reloadedFor'
 
 async function fetchBuildId(): Promise<string | null> {
   try {
-    const res = await fetch(`/version.json?t=${Date.now()}`, { cache: 'no-store' })
+    const res = await fetch(`/version.json?t=${Date.now()}`, {
+      cache: 'no-store',
+    })
     if (!res.ok) return null
     const data = (await res.json()) as { buildId?: string }
     return data.buildId ?? null

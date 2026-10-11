@@ -146,7 +146,7 @@ impl MonsterBrain {
     /// Waypoints are canonical like `position`, so facing one takes the
     /// periodic delta. `PathWaypoint` isn't a `Position`, hence not
     /// `Position::bearing_xz_to`.
-    fn face_toward(&mut self, x: f32, z: f32) {
+    pub(super) fn face_toward(&mut self, x: f32, z: f32) {
         self.rotation = bearing_xz(
             shortest_world_delta_x(self.position.x, x),
             z - self.position.z,

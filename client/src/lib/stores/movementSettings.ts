@@ -11,3 +11,6 @@ alwaysRun.subscribe((v) => (alwaysRunNow = v))
 export function sprintRequested(shiftHeld: boolean): boolean {
   return alwaysRunNow ? !shiftHeld : shiftHeld
 }
+
+/** Automatically attack the nearest monster while idle. */
+export const autoHunt = persistedBoolean('onlinerpg_autoHunt', false)

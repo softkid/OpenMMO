@@ -4,12 +4,13 @@
 use super::tree::BehaviorStatus;
 use super::{
     param, AiCommand, AiState, BehaviorNode, MonsterBrain, NearbyPlayer, PathProvider,
-    ATTACK_RELEASE_MARGIN_METERS, DEFAULT_FLEE_HEALTH_RATIO, DEFAULT_FLEE_MAX_DURATION_MS,
-    DEFAULT_IDLE_CHECK_MS, DEFAULT_LEASH_RANGE, DEFAULT_MAX_MOVE_DIST, DEFAULT_MIN_MOVE_DIST,
-    DEFAULT_PATH_RECALC_MS, DEFAULT_RETURN_ARRIVE_DIST, DEFAULT_TARGET_MOVE_THRESHOLD,
-    FLEE_SAFE_DIST_MARGIN,
+    ATTACK_RELEASE_MARGIN_METERS, CHASE_STOP_RANGE_RATIO, DEFAULT_FLEE_HEALTH_RATIO,
+    DEFAULT_FLEE_MAX_DURATION_MS, DEFAULT_IDLE_CHECK_MS, DEFAULT_LEASH_RANGE,
+    DEFAULT_MAX_MOVE_DIST, DEFAULT_MIN_MOVE_DIST, DEFAULT_PATH_RECALC_MS,
+    DEFAULT_RETURN_ARRIVE_DIST, DEFAULT_TARGET_MOVE_THRESHOLD, FLEE_SAFE_DIST_MARGIN,
 };
-use crate::MonsterState;
+use crate::world::{shortest_world_delta_x, wrap_world_x};
+use crate::{MonsterState, Position};
 use rand::Rng;
 use std::collections::HashMap;
 
@@ -370,14 +371,40 @@ impl MonsterBrain {
             }
         }
 
-        self.follow_path(delta_ms);
+        let dx = shortest_world_delta_x(self.position.x, target_pos.x);
+        let dz = target_pos.z - self.position.z;
+        let dist = (dx * dx + dz * dz).sqrt();
+        let stop = self.attack_range * CHASE_STOP_RANGE_RATIO;
+        let step = self.move_speed * delta_ms / 1000.0;
+        let on_last_leg = self.current_waypoint_idx + 1 >= self.waypoints.len();
+        let aim = if dist > 1e-4 {
+            Position {
+                x: wrap_world_x(target_pos.x - dx / dist * stop),
+                y: target_pos.y,
+                z: target_pos.z - dz / dist * stop,
+            }
+        } else {
+            target_pos
+        };
+
+        if on_last_leg && dist - step <= stop {
+            if dist > stop {
+                let advance = dist - stop;
+                self.position.x = wrap_world_x(self.position.x + dx / dist * advance);
+                self.position.z += dz / dist * advance;
+            }
+            self.face_toward(target_pos.x, target_pos.z);
+            self.current_waypoint_idx = self.waypoints.len();
+        } else {
+            self.follow_path(delta_ms);
+        }
         if self.should_sync_move() {
             commands.push(AiCommand::Move {
                 monster_id: self.monster_id.clone(),
                 position: self.position,
                 rotation: self.rotation,
                 state: MonsterState::Run,
-                target_position: target_pos,
+                target_position: aim,
             });
         }
         BehaviorStatus::Running

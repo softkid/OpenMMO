@@ -535,7 +535,8 @@ export function passability_update_door(house_id, room_val, wall_dir_val, segmen
  * @returns {number}
  */
 export function protocol_version() {
-    return 103;
+    const ret = wasm.protocol_version();
+    return ret >>> 0;
 }
 
 /**

@@ -108,6 +108,12 @@ if [ -n "$available_kb" ] && [ "$available_kb" -lt "$required_kb" ]; then
     echo "terrain-init:   partway through. Free up space, shrink TERRAIN_REGION_MIN/MAX, or" >&2
     echo "terrain-init:   set TERRAIN_SKIP_DISK_CHECK=1 to bake anyway." >&2
     if [ -z "${TERRAIN_SKIP_DISK_CHECK:-}" ]; then
+        if [ -f "$TERRAIN_DIR/worldgen.json" ]; then
+            echo "terrain-init: keeping the existing bake so the server can still start." >&2
+            seed_zones
+            own_volume "$TERRAIN_DIR"
+            exit 0
+        fi
         exit 1
     fi
     echo "terrain-init: TERRAIN_SKIP_DISK_CHECK set, proceeding despite the estimate above."

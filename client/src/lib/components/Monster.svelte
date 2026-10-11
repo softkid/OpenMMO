@@ -1,3 +1,27 @@
+<script module lang="ts">
+  import * as THREE_M from 'three'
+
+  const HP_BAR_WIDTH = 0.9
+  const HP_BAR_HEIGHT = 0.07
+
+  const hpBarBgGeometry = new THREE_M.PlaneGeometry(HP_BAR_WIDTH, HP_BAR_HEIGHT)
+  const hpBarFillGeometry = new THREE_M.PlaneGeometry(
+    HP_BAR_WIDTH,
+    HP_BAR_HEIGHT
+  )
+  hpBarFillGeometry.translate(HP_BAR_WIDTH / 2, 0, 0)
+  const hpBarBgMaterial = new THREE_M.MeshBasicMaterial({
+    color: '#000000',
+    transparent: true,
+    opacity: 0.5,
+    depthTest: false,
+  })
+  const hpBarFillMaterial = new THREE_M.MeshBasicMaterial({
+    color: '#e53e3e',
+    depthTest: false,
+  })
+</script>
+
 <script lang="ts">
   import { T, useLoader } from '@threlte/core'
   import TextLabel from './TextLabel.svelte'
@@ -30,6 +54,8 @@
     id: string
     type: string
     lastDamageInfo?: MonsterData['lastDamageInfo']
+    health?: number
+    maxHealth?: number
     droppedWeaponItemDefId?: string
     onHitFinished?: () => void
   }
@@ -42,6 +68,8 @@
     id,
     type,
     lastDamageInfo,
+    health = 0,
+    maxHealth = 0,
     droppedWeaponItemDefId,
     onHitFinished,
   }: Props = $props()
@@ -332,11 +360,8 @@
           }
         })
 
-        if (isBoss) {
-          // Hang the nameplate just above the scaled bind-pose head.
-          const modelTop = new THREE.Box3().setFromObject(clonedScene).max.y
-          nametagHeight = modelTop * initialScale + 0.4
-        }
+        const modelTop = new THREE.Box3().setFromObject(clonedScene).max.y
+        nametagHeight = modelTop * initialScale + (isBoss ? 0.4 : 0.3)
 
         model = clonedScene
         // Setup mixer on the cloned scene
@@ -463,6 +488,23 @@
 
 <!-- Name tag / Debug info -->
 <T.Group bind:ref={nametagGroup}>
+  {#if monsterState !== 'dead' && maxHealth > 0}
+    <T.Group position.y={isBoss ? -0.15 : 0}>
+      <T.Mesh
+        geometry={hpBarBgGeometry}
+        material={hpBarBgMaterial}
+        renderOrder={10}
+      />
+      <T.Mesh
+        geometry={hpBarFillGeometry}
+        material={hpBarFillMaterial}
+        renderOrder={11}
+        position.x={-HP_BAR_WIDTH / 2}
+        position.z={0.001}
+        scale.x={Math.max(0.001, Math.min(1, health / maxHealth))}
+      />
+    </T.Group>
+  {/if}
   {#if isBoss && monsterState !== 'dead'}
     <TextLabel
       text={initialDef?.name ?? type}

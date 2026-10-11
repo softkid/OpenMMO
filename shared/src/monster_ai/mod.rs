@@ -76,6 +76,8 @@ const DEFAULT_TARGET_MOVE_THRESHOLD: f32 = 3.0;
 /// decisions, which has nothing to do with the monster's reach. Well inside the
 /// server's own (also absolute) reach slack.
 const ATTACK_RELEASE_MARGIN_METERS: f32 = 0.5;
+/// Chase halts at this fraction of attack range so the monster never walks onto its target.
+const CHASE_STOP_RANGE_RATIO: f32 = 0.8;
 /// Least time between network position syncs while a monster is continuously
 /// moving (chase/return/flee). The brain simulates every frame but only emits a
 /// `Move` this often, cutting ~60/s of packets to ~2/s; remote clients

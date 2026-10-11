@@ -28,13 +28,8 @@
   )
   const HIDDEN_POS = { x: 0, y: OFFSCREEN_Y, z: 0 }
 
-  // Flat starting radius for doc/REFACTOR_2026-09.md's "몹과 부딪혀도 그림이
-  // 겹침" fix — a visual-only floor so a melee target never renders
-  // standing exactly on top of the player. Doesn't vary by monster size yet
-  // (no reliable per-type radius data was available while implementing this
-  // blind — i.e. without being able to see it rendered); tune per monster
-  // type once someone can look at it.
-  const MONSTER_SEPARATION_MIN_DISTANCE = 0.7
+  // Visual-only floor so a melee target never renders on top of the player.
+  const MONSTER_SEPARATION_MIN_DISTANCE = 1.0
 
   function isOnViewerFloor(monster: MonsterData): boolean {
     const fl = monster.floorLevel ?? 0
@@ -58,7 +53,10 @@
       viewerX === undefined ||
       Math.abs(monster.position.x - viewerX) <= WORLD_WIDTH_X / 2
         ? monster.position
-        : { ...monster.position, x: unwrapWorldXNear(viewerX, monster.position.x) }
+        : {
+            ...monster.position,
+            x: unwrapWorldXNear(viewerX, monster.position.x),
+          }
 
     if (!currentPlayer) return unwrapped
     const separated = separateOnGroundPlane(
@@ -80,6 +78,8 @@
     monsterState={monster.state}
     attackCounter={monster.attackCounter}
     lastDamageInfo={monster.lastDamageInfo}
+    health={monster.health}
+    maxHealth={monster.maxHealth}
     droppedWeaponItemDefId={monster.droppedWeaponItemDefId}
     onHitFinished={() => monsterManager.handleMonsterHitFinished(monster.id)}
   />

@@ -10,7 +10,7 @@
   } from '../stores/graphicsSettings'
   import VolumeControl from './VolumeControl.svelte'
   import { minimapEnabled } from '../stores/minimapStore'
-  import { alwaysRun } from '../stores/movementSettings'
+  import { alwaysRun, autoHunt } from '../stores/movementSettings'
   import ToggleSwitch from './ToggleSwitch.svelte'
   import { friendOnlineNoticeEnabled } from '../stores/friendStore'
   import { mountOverlay } from '../stores/overlayStack'
@@ -55,6 +55,11 @@
       'Always Run',
       alwaysRun,
       $alwaysRun ? 'Hold Shift to walk' : 'Hold Shift to run'
+    )}
+    {@render toggleRow(
+      'Auto Hunt',
+      autoHunt,
+      'Attack nearby monsters while idle'
     )}
     {@render toggleRow('Friend Online Notice', friendOnlineNoticeEnabled)}
 

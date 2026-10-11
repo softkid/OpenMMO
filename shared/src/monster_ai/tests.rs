@@ -1133,3 +1133,35 @@ fn leash_measures_periodic_distance_to_spawn() {
         "a monster inside its leash must not report a return"
     );
 }
+
+#[test]
+fn chase_stops_short_of_target_even_with_a_large_step() {
+    let mut brain = make_brain();
+    brain.attack_range = 2.0;
+    let tree = BehaviorTree {
+        description: None,
+        root: BehaviorNode::Action {
+            name: "chase_target".into(),
+            params: HashMap::new(),
+        },
+    };
+    let mut rng = SmallRng::seed_from_u64(7);
+    let target = Position {
+        x: brain.position.x + 5.0,
+        y: 0.0,
+        z: brain.position.z,
+    };
+    brain.target_player_id = Some(1.into());
+    let players = vec![NearbyPlayer {
+        id: 1.into(),
+        position: target,
+        health: 10,
+    }];
+
+    for _ in 0..3 {
+        brain.tick_with_behavior_tree(1000.0, &players, &tree, &DirectPath, &mut rng);
+    }
+
+    let dist = (brain.position.x - target.x).hypot(brain.position.z - target.z);
+    assert!((dist - 1.6).abs() < 0.01, "stopped at {dist}");
+}

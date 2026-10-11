@@ -54,10 +54,14 @@
   import { dungeonManager } from '../managers/dungeonManager'
   import { housingManager } from '../managers/housingManager'
   import { findPath } from '../managers/pathfinding'
-  import { PROP_SWING_IMPACT_MS } from '../data/combatTiming'
+  import {
+    PLAYER_ATTACK_RANGE_METERS,
+    PROP_SWING_IMPACT_MS,
+  } from '../data/combatTiming'
   import { passability_get_floor_at } from '../wasm/onlinerpg_shared'
   import { get } from 'svelte/store'
-  import { sprintRequested } from '../stores/movementSettings'
+  import { autoHunt, sprintRequested } from '../stores/movementSettings'
+  import { findAutoHuntTarget } from './player-control/auto-hunt'
   import { createPlayerPhysics } from './player-control/player-physics'
   import { subscribePlayerNetworkEvents } from './player-control/player-network-events'
   import type {
@@ -1579,7 +1583,26 @@
     hoveredSignpost.set(null)
   }
 
+  const AUTO_HUNT_TICK_MS = 500
+
+  function autoHuntTick() {
+    if (!get(autoHunt) || !currentPlayer || currentPlayer.health <= 0) return
+    if (playerState.state !== 'idle' || combatController.isInCombat) return
+    const floor = currentPassabilityFloor()
+    const from = currentPlayer.position
+    const target = findAutoHuntTarget(
+      from,
+      floor,
+      monsterManager.monsters.values(),
+      (to) => attackLineBlocked(from, to, floor)
+    )
+    if (!target) return
+    if (target.distance < PLAYER_ATTACK_RANGE_METERS) initiateAttack(target.id)
+    else chaseAndAttack(target.id, target.position)
+  }
+
   onMount(() => {
+    const autoHuntTimer = setInterval(autoHuntTick, AUTO_HUNT_TICK_MS)
     preloadSwordHitSound()
     preloadSwordMissSound()
     preloadFishingSounds()
@@ -1605,6 +1628,7 @@
     })
 
     return () => {
+      clearInterval(autoHuntTimer)
       removeInputListeners()
       canvas.removeEventListener('pointermove', handlePointerHover)
       canvas.removeEventListener('pointerleave', clearHover)

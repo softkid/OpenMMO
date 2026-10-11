@@ -435,6 +435,7 @@ class MonsterManager {
         volumeFactor
       )
     }
+    if (hit) monster.health = Math.max(0, monster.health - damage)
     // Temporarily store damage to show at impact
     monster.pendingDamage = damage
     if (isLocalPlayerAttack) {
