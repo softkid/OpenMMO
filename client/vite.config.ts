@@ -42,9 +42,29 @@ export default defineConfig(({ mode }) => {
     fs.readFileSync(new URL('./package.json', import.meta.url), 'utf8')
   ).version
 
+  const buildId = process.env.BUILD_ID || String(Date.now())
+
   return {
-    plugins: [monsterCsvPlugin(), wasm(), svelte()],
-    define: { __APP_VERSION__: JSON.stringify(appVersion) },
+    plugins: [
+      monsterCsvPlugin(),
+      wasm(),
+      svelte(),
+      {
+        name: 'build-id',
+        apply: 'build',
+        generateBundle() {
+          this.emitFile({
+            type: 'asset',
+            fileName: 'version.json',
+            source: JSON.stringify({ buildId }),
+          })
+        },
+      },
+    ],
+    define: {
+      __APP_VERSION__: JSON.stringify(appVersion),
+      __BUILD_ID__: JSON.stringify(buildId),
+    },
     server: {
       host: true,
       port: 10004,

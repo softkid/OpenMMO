@@ -29,6 +29,7 @@ import initWasm, {
 } from '../wasm/onlinerpg_shared'
 import { createEvent } from './networkEvents'
 import { handleServerMessage } from './messageHandlers'
+import { reloadIfOutdated } from './versionCheck'
 import type {
   AccountCharacter,
   CharacterClass,
@@ -201,6 +202,7 @@ class NetworkManager {
           this.lastAuthErrorMessage ??
             'This client is out of date. Please reload the page.'
         )
+        void reloadIfOutdated(true)
         return
       }
 
